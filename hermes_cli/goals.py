@@ -690,6 +690,30 @@ def _goal_judge_max_tokens() -> int:
     return DEFAULT_JUDGE_MAX_TOKENS
 
 
+def _goal_judge_timeout() -> float:
+    """Resolve auxiliary.goal_judge.timeout, falling back to the default.
+
+    ``load_config()`` is cached on the config file's (mtime, size), so calling
+    this once per judge turn is cheap. A non-positive or non-float value falls
+    back to the default rather than crashing the goal loop.
+    """
+    try:
+        from hermes_cli.config import load_config
+
+        cfg = load_config()
+        value = (
+            (cfg.get("auxiliary") or {})
+            .get("goal_judge", {})
+            .get("timeout", DEFAULT_JUDGE_TIMEOUT)
+        )
+        value = float(value)
+        if value > 0:
+            return value
+    except Exception:
+        pass
+    return DEFAULT_JUDGE_TIMEOUT
+
+
 def _parse_judge_response(raw: str) -> Tuple[str, str, bool, Optional[Dict[str, Any]]]:
     """Parse the judge's reply. Fail-open on unusable output.
 
@@ -837,7 +861,7 @@ def judge_goal(
     goal: str,
     last_response: str,
     *,
-    timeout: float = DEFAULT_JUDGE_TIMEOUT,
+    timeout: Optional[float] = None,
     subgoals: Optional[List[str]] = None,
     background_processes: Optional[List[Dict[str, Any]]] = None,
     contract: Optional[GoalContract] = None,
@@ -943,7 +967,7 @@ def judge_goal(
             ],
             temperature=0,
             max_tokens=_goal_judge_max_tokens(),
-            timeout=timeout,
+            timeout=timeout if timeout is not None else _goal_judge_timeout(),
             extra_body=get_auxiliary_extra_body() or None,
         )
     except Exception as exc:
@@ -984,7 +1008,7 @@ def gather_background_processes(task_id: Optional[str] = None) -> List[Dict[str,
     return [s for s in sessions if isinstance(s, dict) and s.get("status") != "exited"]
 
 
-def draft_contract(objective: str, *, timeout: float = DEFAULT_JUDGE_TIMEOUT) -> Optional[GoalContract]:
+def draft_contract(objective: str, *, timeout: Optional[float] = None) -> Optional[GoalContract]:
     """Expand a plain-language objective into a structured completion contract.
 
     Uses the ``goal_judge`` auxiliary task (main-model-first, cache-safe — it
@@ -1022,7 +1046,7 @@ def draft_contract(objective: str, *, timeout: float = DEFAULT_JUDGE_TIMEOUT) ->
             ],
             temperature=0,
             max_tokens=_goal_judge_max_tokens(),
-            timeout=timeout,
+            timeout=timeout if timeout is not None else _goal_judge_timeout(),
             extra_body=get_auxiliary_extra_body() or None,
         )
     except Exception as exc:
