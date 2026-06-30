@@ -173,6 +173,7 @@ bq query --use_legacy_sql=false --format=json "YOUR QUERY"
 **Option B: Python** (via `execute_code`)
 ```python
 from google.cloud import bigquery
+
 client = bigquery.Client()
 query = "YOUR QUERY"
 results = client.query(query).result()

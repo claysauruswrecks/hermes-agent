@@ -72,8 +72,8 @@ SIMPLEX_HOME_CHANNEL=<contact-id>
 cronjob(
     action="create",
     schedule="every 1h",
-    deliver="simplex",          # uses SIMPLEX_HOME_CHANNEL
-    prompt="Check for alerts and summarise."
+    deliver="simplex",  # uses SIMPLEX_HOME_CHANNEL
+    prompt="Check for alerts and summarise.",
 )
 ```
 

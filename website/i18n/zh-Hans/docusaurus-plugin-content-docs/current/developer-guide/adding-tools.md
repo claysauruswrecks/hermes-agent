@@ -48,12 +48,14 @@ logger = logging.getLogger(__name__)
 
 # --- Availability check ---
 
+
 def check_weather_requirements() -> bool:
     """Return True if the tool's dependencies are available."""
     return bool(os.getenv("WEATHER_API_KEY"))
 
 
 # --- Handler ---
+
 
 def weather_tool(location: str, units: str = "metric") -> str:
     """Fetch weather for a location. Returns JSON string."""
@@ -77,17 +79,17 @@ WEATHER_SCHEMA = {
         "properties": {
             "location": {
                 "type": "string",
-                "description": "City name or coordinates (e.g. 'London' or '51.5,-0.1')"
+                "description": "City name or coordinates (e.g. 'London' or '51.5,-0.1')",
             },
             "units": {
                 "type": "string",
                 "enum": ["metric", "imperial"],
                 "description": "Temperature units (default: metric)",
-                "default": "metric"
-            }
+                "default": "metric",
+            },
         },
-        "required": ["location"]
-    }
+        "required": ["location"],
+    },
 }
 
 
@@ -100,8 +102,8 @@ registry.register(
     toolset="weather",
     schema=WEATHER_SCHEMA,
     handler=lambda args, **kw: weather_tool(
-        location=args.get("location", ""),
-        units=args.get("units", "metric")),
+        location=args.get("location", ""), units=args.get("units", "metric")
+    ),
     check_fn=check_weather_requirements,
     requires_env=["WEATHER_API_KEY"],
 )
@@ -148,6 +150,7 @@ async def weather_tool_async(location: str) -> str:
     async with aiohttp.ClientSession() as session:
         ...
     return json.dumps(result)
+
 
 registry.register(
     name="weather",

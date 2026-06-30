@@ -41,8 +41,8 @@ Your engine must implement these **required** methods:
 ```python
 from agent.context_engine import ContextEngine
 
-class LCMEngine(ContextEngine):
 
+class LCMEngine(ContextEngine):
     @property
     def name(self) -> str:
         """Short identifier, e.g. 'lcm'. Must match config.yaml value."""
@@ -58,8 +58,9 @@ class LCMEngine(ContextEngine):
     def should_compress(self, prompt_tokens: int = None) -> bool:
         """Return True if compaction should fire this turn."""
 
-    def compress(self, messages: list, current_tokens: int = None,
-                 focus_topic: str = None) -> list:
+    def compress(
+        self, messages: list, current_tokens: int = None, focus_topic: str = None
+    ) -> list:
         """Compact the message list and return a new (possibly shorter) list.
 
         The returned list must be a valid OpenAI-format message sequence.
@@ -78,9 +79,9 @@ The agent reads these directly for display and logging:
 last_prompt_tokens: int = 0
 last_completion_tokens: int = 0
 last_total_tokens: int = 0
-threshold_tokens: int = 0        # when compression triggers
-context_length: int = 0          # model's full context window
-compression_count: int = 0       # how many times compress() has run
+threshold_tokens: int = 0  # when compression triggers
+context_length: int = 0  # model's full context window
+compression_count: int = 0  # how many times compress() has run
 ```
 
 ### Optional methods
@@ -104,17 +105,20 @@ Context engines can expose tools the agent calls directly. Return schemas from `
 
 ```python
 def get_tool_schemas(self):
-    return [{
-        "name": "lcm_grep",
-        "description": "Search the context knowledge graph",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "Search query"}
+    return [
+        {
+            "name": "lcm_grep",
+            "description": "Search the context knowledge graph",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"}
+                },
+                "required": ["query"],
             },
-            "required": ["query"],
-        },
-    }]
+        }
+    ]
+
 
 def handle_tool_call(self, name, args, **kwargs):
     if name == "lcm_grep":
@@ -172,10 +176,12 @@ The `compression` config block (`compression.threshold`, `compression.protect_la
 ```python
 from agent.context_engine import ContextEngine
 
+
 def test_engine_satisfies_abc():
     engine = YourEngine(context_length=200000)
     assert isinstance(engine, ContextEngine)
     assert engine.name == "your-name"
+
 
 def test_compress_returns_valid_messages():
     engine = YourEngine(context_length=200000)

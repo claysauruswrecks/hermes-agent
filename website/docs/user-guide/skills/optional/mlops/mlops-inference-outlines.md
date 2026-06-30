@@ -80,10 +80,12 @@ print(sentiment)  # "positive" (guaranteed one of these)
 from pydantic import BaseModel
 import outlines
 
+
 class User(BaseModel):
     name: str
     age: int
     email: str
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 
@@ -92,8 +94,8 @@ prompt = "Extract user: John Doe, 30 years old, john@example.com"
 generator = outlines.generate.json(model, User)
 user = generator(prompt)
 
-print(user.name)   # "John Doe"
-print(user.age)    # 30
+print(user.name)  # "John Doe"
+print(user.age)  # 30
 print(user.email)  # "john@example.com"
 ```
 
@@ -117,10 +119,12 @@ Outlines uses Finite State Machines (FSM) to constrain token generation at the l
 ```python
 import outlines
 
+
 # Pydantic model -> JSON schema -> CFG -> FSM
 class Person(BaseModel):
     name: str
     age: int
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 
@@ -142,10 +146,7 @@ Outlines provides specialized generators for different output types.
 
 ```python
 # Multiple choice selection
-generator = outlines.generate.choice(
-    model,
-    ["positive", "negative", "neutral"]
-)
+generator = outlines.generate.choice(model, ["positive", "negative", "neutral"])
 
 sentiment = generator("Review: This is great!")
 # Result: One of the three choices
@@ -156,10 +157,12 @@ sentiment = generator("Review: This is great!")
 ```python
 from pydantic import BaseModel
 
+
 class Product(BaseModel):
     name: str
     price: float
     in_stock: bool
+
 
 # Generate valid JSON matching schema
 generator = outlines.generate.json(model, Product)
@@ -175,7 +178,7 @@ print(type(product))  # <class '__main__.Product'>
 # Generate text matching regex
 generator = outlines.generate.regex(
     model,
-    r"[0-9]{3}-[0-9]{3}-[0-9]{4}"  # Phone number pattern
+    r"[0-9]{3}-[0-9]{3}-[0-9]{4}",  # Phone number pattern
 )
 
 phone = generator("Generate phone number:")
@@ -205,7 +208,7 @@ import outlines
 # Load from Hugging Face
 model = outlines.models.transformers(
     "microsoft/Phi-3-mini-4k-instruct",
-    device="cuda"  # Or "cpu"
+    device="cuda",  # Or "cpu"
 )
 
 # Use with any generator
@@ -217,8 +220,7 @@ generator = outlines.generate.json(model, YourModel)
 ```python
 # Load GGUF model
 model = outlines.models.llamacpp(
-    "./models/llama-3.1-8b-instruct.Q4_K_M.gguf",
-    n_gpu_layers=35
+    "./models/llama-3.1-8b-instruct.Q4_K_M.gguf", n_gpu_layers=35
 )
 
 generator = outlines.generate.json(model, YourModel)
@@ -230,7 +232,7 @@ generator = outlines.generate.json(model, YourModel)
 # For production deployments
 model = outlines.models.vllm(
     "meta-llama/Llama-3.1-8B-Instruct",
-    tensor_parallel_size=2  # Multi-GPU
+    tensor_parallel_size=2,  # Multi-GPU
 )
 
 generator = outlines.generate.json(model, YourModel)
@@ -240,10 +242,7 @@ generator = outlines.generate.json(model, YourModel)
 
 ```python
 # Basic OpenAI support
-model = outlines.models.openai(
-    "gpt-4o-mini",
-    api_key="your-api-key"
-)
+model = outlines.models.openai("gpt-4o-mini", api_key="your-api-key")
 
 # Note: Some features limited with API models
 generator = outlines.generate.json(model, YourModel)
@@ -258,11 +257,13 @@ Outlines has first-class Pydantic support with automatic schema translation.
 ```python
 from pydantic import BaseModel, Field
 
+
 class Article(BaseModel):
     title: str = Field(description="Article title")
     author: str = Field(description="Author name")
     word_count: int = Field(description="Number of words", gt=0)
     tags: list[str] = Field(description="List of tags")
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, Article)
@@ -280,10 +281,12 @@ class Address(BaseModel):
     city: str
     country: str
 
+
 class Person(BaseModel):
     name: str
     age: int
     address: Address  # Nested model
+
 
 generator = outlines.generate.json(model, Person)
 person = generator("Generate person in New York")
@@ -297,15 +300,18 @@ print(person.address.city)  # "New York"
 from enum import Enum
 from typing import Literal
 
+
 class Status(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
 
+
 class Application(BaseModel):
     applicant: str
     status: Status  # Must be one of enum values
     priority: Literal["low", "medium", "high"]  # Must be one of literals
+
 
 generator = outlines.generate.json(model, Application)
 app = generator("Generate application")
@@ -321,11 +327,13 @@ print(app.status)  # Status.PENDING (or APPROVED/REJECTED)
 from pydantic import BaseModel
 import outlines
 
+
 class CompanyInfo(BaseModel):
     name: str
     founded_year: int
     industry: str
     employees: int
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, CompanyInfo)
@@ -361,10 +369,12 @@ categories = ["technology", "business", "sports", "entertainment"]
 category_gen = outlines.generate.choice(model, categories)
 category = category_gen("Article: Apple announces new iPhone...")
 
+
 # With confidence
 class Classification(BaseModel):
     label: Literal["positive", "negative", "neutral"]
     confidence: float
+
 
 classifier = outlines.generate.json(model, Classification)
 result = classifier("Review: This product is okay, nothing special")
@@ -380,6 +390,7 @@ class UserProfile(BaseModel):
     phone: str
     country: str
     interests: list[str]
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, UserProfile)
@@ -406,8 +417,10 @@ class Entity(BaseModel):
     name: str
     type: Literal["PERSON", "ORGANIZATION", "LOCATION"]
 
+
 class DocumentEntities(BaseModel):
     entities: list[Entity]
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, DocumentEntities)
@@ -428,6 +441,7 @@ class PythonFunction(BaseModel):
     parameters: list[str]
     docstring: str
     body: str
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, PythonFunction)
@@ -455,15 +469,13 @@ def batch_extract(texts: list[str], schema: type[BaseModel]):
 
     return results
 
+
 class Person(BaseModel):
     name: str
     age: int
 
-texts = [
-    "John is 30 years old",
-    "Alice is 25 years old",
-    "Bob is 40 years old"
-]
+
+texts = ["John is 30 years old", "Alice is 25 years old", "Bob is 40 years old"]
 
 people = batch_extract(texts, Person)
 for person in people:
@@ -484,7 +496,7 @@ model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 model = outlines.models.transformers(
     "microsoft/Phi-3-mini-4k-instruct",
     device="cuda",
-    model_kwargs={"torch_dtype": "float16"}
+    model_kwargs={"torch_dtype": "float16"},
 )
 
 # Popular models
@@ -499,15 +511,15 @@ model = outlines.models.transformers("Qwen/Qwen2.5-7B-Instruct")
 # Load GGUF model
 model = outlines.models.llamacpp(
     "./models/llama-3.1-8b.Q4_K_M.gguf",
-    n_ctx=4096,         # Context window
-    n_gpu_layers=35,    # GPU layers
-    n_threads=8         # CPU threads
+    n_ctx=4096,  # Context window
+    n_gpu_layers=35,  # GPU layers
+    n_threads=8,  # CPU threads
 )
 
 # Full GPU offload
 model = outlines.models.llamacpp(
     "./models/model.gguf",
-    n_gpu_layers=-1  # All layers on GPU
+    n_gpu_layers=-1,  # All layers on GPU
 )
 ```
 
@@ -520,13 +532,13 @@ model = outlines.models.vllm("meta-llama/Llama-3.1-8B-Instruct")
 # Multi-GPU
 model = outlines.models.vllm(
     "meta-llama/Llama-3.1-70B-Instruct",
-    tensor_parallel_size=4  # 4 GPUs
+    tensor_parallel_size=4,  # 4 GPUs
 )
 
 # With quantization
 model = outlines.models.vllm(
     "meta-llama/Llama-3.1-8B-Instruct",
-    quantization="awq"  # Or "gptq"
+    quantization="awq",  # Or "gptq"
 )
 ```
 
@@ -542,6 +554,7 @@ class Product(BaseModel):
     quantity: int  # Not str
     in_stock: bool  # Not str
 
+
 # ❌ Bad: Everything as string
 class Product(BaseModel):
     name: str
@@ -554,11 +567,13 @@ class Product(BaseModel):
 ```python
 from pydantic import Field
 
+
 # ✅ Good: With constraints
 class User(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     age: int = Field(ge=0, le=120)
     email: str = Field(pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$")
+
 
 # ❌ Bad: No constraints
 class User(BaseModel):
@@ -576,9 +591,11 @@ class Priority(str, Enum):
     MEDIUM = "medium"
     HIGH = "high"
 
+
 class Task(BaseModel):
     title: str
     priority: Priority
+
 
 # ❌ Bad: Free-form string
 class Task(BaseModel):
@@ -605,12 +622,14 @@ prompt = "iPhone 15 Pro costs $999 and is currently in stock."
 ```python
 from typing import Optional
 
+
 # ✅ Good: Optional fields for incomplete data
 class Article(BaseModel):
     title: str  # Required
     author: Optional[str] = None  # Optional
     date: Optional[str] = None  # Optional
     tags: list[str] = []  # Default empty list
+
 
 # Can succeed even if author/date missing
 ```

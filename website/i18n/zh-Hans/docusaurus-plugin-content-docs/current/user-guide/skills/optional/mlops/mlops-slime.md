@@ -139,9 +139,9 @@ python train.py \
 {
     "prompt": [
         {"role": "system", "content": "You are a math tutor."},
-        {"role": "user", "content": "What is 15 + 27?"}
+        {"role": "user", "content": "What is 15 + 27?"},
     ],
-    "label": "42"
+    "label": "42",
 }
 ```
 

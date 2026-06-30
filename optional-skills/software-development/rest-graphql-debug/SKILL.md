@@ -46,7 +46,7 @@ Skip for UI rendering, DB query tuning, or DNS/firewall infra (escalate).
 
 ```python
 # Verbose request/response exchange
-terminal('curl -v https://api.example.com/users/1')
+terminal("curl -v https://api.example.com/users/1")
 
 # POST with JSON
 terminal("""curl -X POST https://api.example.com/users \\
@@ -55,10 +55,10 @@ terminal("""curl -X POST https://api.example.com/users \\
   -d '{"name":"test","email":"test@example.com"}'""")
 
 # Headers only
-terminal('curl -sI https://api.example.com/health')
+terminal("curl -sI https://api.example.com/health")
 
 # Pretty-print JSON
-terminal('curl -s https://api.example.com/users | python3 -m json.tool')
+terminal("curl -s https://api.example.com/users | python3 -m json.tool")
 ```
 
 ### GraphQL via terminal
@@ -73,7 +73,7 @@ terminal("""curl -X POST https://api.example.com/graphql \\
 **GraphQL gotcha:** servers often return HTTP 200 even when the query failed. Always inspect the `errors` field regardless of status code:
 
 ```python
-execute_code('''
+execute_code("""
 import os, requests
 resp = requests.post(
     "https://api.example.com/graphql",
@@ -86,13 +86,13 @@ if data.get("errors"):
     for err in data["errors"]:
         print(f"GraphQL error: {err['message']} (path: {err.get('path')})")
 print(data.get("data"))
-''')
+""")
 ```
 
 ### Python (requests) via execute_code
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 resp = requests.get(
     "https://api.example.com/users/1",
@@ -101,7 +101,7 @@ resp = requests.get(
 )
 print(resp.status_code, dict(resp.headers))
 print(resp.text[:500])
-''')
+""")
 ```
 
 ## Layered Debug Flow
@@ -109,8 +109,8 @@ print(resp.text[:500])
 ### Step 1 — Connectivity
 
 ```python
-terminal('nslookup api.example.com')
-terminal('curl -v --connect-timeout 5 https://api.example.com/health')
+terminal("nslookup api.example.com")
+terminal("curl -v --connect-timeout 5 https://api.example.com/health")
 ```
 
 Failures: DNS not resolving, firewall, VPN required, proxy missing.
@@ -120,14 +120,14 @@ Failures: DNS not resolving, firewall, VPN required, proxy missing.
 Distinguish *can't reach* from *reaches but slow*:
 
 ```python
-terminal('''curl -w "dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n" \\
-  -o /dev/null -s https://api.example.com/endpoint''')
+terminal("""curl -w "dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n" \\
+  -o /dev/null -s https://api.example.com/endpoint""")
 ```
 
 In Python, always pass a tuple timeout — `requests` has no default and will hang forever:
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 from requests.exceptions import ConnectTimeout, ReadTimeout
 try:
@@ -136,7 +136,7 @@ except ConnectTimeout:
     print("Cannot reach host — DNS, firewall, VPN")
 except ReadTimeout:
     print("Connected but server is slow")
-''')
+""")
 ```
 
 Diagnosis: high `time_connect` is network/firewall; high `time_starttransfer` with low `time_connect` is a slow server.
@@ -153,16 +153,18 @@ Failures: expired cert, self-signed, hostname mismatch, missing CA bundle. Use `
 
 ```python
 # Token validity check
-terminal('curl -s -o /dev/null -w "%{http_code}\\n" -H "Authorization: Bearer $TOKEN" https://api.example.com/me')
+terminal(
+    'curl -s -o /dev/null -w "%{http_code}\\n" -H "Authorization: Bearer $TOKEN" https://api.example.com/me'
+)
 
 # Decode JWT exp claim — handles base64url padding correctly
-execute_code('''
+execute_code("""
 import json, base64, os
 tok = os.environ["TOKEN"]
 payload = tok.split(".")[1]
 payload += "=" * (-len(payload) % 4)
 print(json.dumps(json.loads(base64.urlsafe_b64decode(payload)), indent=2))
-''')
+""")
 ```
 
 Checklist:
@@ -202,7 +204,7 @@ Common: form-encoded vs JSON, missing required fields, wrong HTTP method, unenco
 Always inspect content-type before calling `.json()`:
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 resp = requests.post(url, json=payload, timeout=10)
 print(f"status={resp.status_code}")
@@ -212,7 +214,7 @@ if "application/json" in ct:
     print(resp.json())
 else:
     print(f"unexpected content-type {ct!r}, body={resp.text[:500]!r}")
-''')
+""")
 ```
 
 Failures: HTML error page where JSON expected, empty body, wrong charset.
@@ -267,7 +269,7 @@ The error body usually names the bad fields. Check:
 Check `Retry-After` and `X-RateLimit-*` headers. Exponential backoff:
 
 ```python
-execute_code('''
+execute_code("""
 import time, requests
 
 def with_backoff(method, url, **kwargs):
@@ -278,7 +280,7 @@ def with_backoff(method, url, **kwargs):
         wait = int(resp.headers.get("Retry-After", 2 ** attempt))
         time.sleep(wait)
     return resp
-''')
+""")
 ```
 
 ### 5xx — server-side, usually not your fault
@@ -303,7 +305,7 @@ For all 5xx: backoff with jitter, alert on persistence.
 Catch schema drift before it hits production:
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 
 def validate_user(data: dict) -> list[str]:
@@ -320,7 +322,7 @@ resp = requests.get(f"{BASE}/users/1", headers=HEADERS, timeout=10)
 issues = validate_user(resp.json())
 if issues:
     print(f"contract violations: {issues}")
-''')
+""")
 ```
 
 Run after API upgrades, when integrating new third parties, or in CI smoke tests.
@@ -330,7 +332,7 @@ Run after API upgrades, when integrating new third parties, or in CI smoke tests
 Always capture the provider's request ID — fastest path to vendor support:
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 resp = requests.post(url, json=payload, headers=headers, timeout=10)
 request_id = (
@@ -340,7 +342,7 @@ request_id = (
 )
 if resp.status_code >= 400:
     print(f"failed status={resp.status_code} req_id={request_id} ts={resp.headers.get('Date')}")
-''')
+""")
 ```
 
 **Vendor bug-report template:**
@@ -363,8 +365,9 @@ Drop this into `tests/` and run via `terminal('pytest tests/test_api_smoke.py -v
 import os, requests, pytest
 
 BASE_URL = os.environ.get("API_BASE_URL", "https://api.example.com")
-TOKEN    = os.environ.get("API_TOKEN", "")
-HEADERS  = {"Authorization": f"Bearer {TOKEN}"}
+TOKEN = os.environ.get("API_TOKEN", "")
+HEADERS = {"Authorization": f"Bearer {TOKEN}"}
+
 
 class TestAPISmoke:
     def test_health(self):
@@ -405,7 +408,9 @@ class TestAPISmoke:
 ```python
 def redact_auth(headers: dict) -> dict:
     sensitive = {"authorization", "x-api-key", "cookie", "set-cookie"}
-    return {k: ("<REDACTED>" if k.lower() in sensitive else v) for k, v in headers.items()}
+    return {
+        k: ("<REDACTED>" if k.lower() in sensitive else v) for k, v in headers.items()
+    }
 ```
 
 ### Leak checklist
@@ -422,8 +427,10 @@ def redact_auth(headers: dict) -> dict:
 ### terminal — for curl, dig, openssl
 
 ```python
-terminal('curl -sI https://api.example.com')
-terminal('openssl s_client -connect api.example.com:443 -servername api.example.com </dev/null 2>/dev/null | openssl x509 -noout -dates')
+terminal("curl -sI https://api.example.com")
+terminal(
+    "openssl s_client -connect api.example.com:443 -servername api.example.com </dev/null 2>/dev/null | openssl x509 -noout -dates"
+)
 ```
 
 ### execute_code — for multi-step Python flows
@@ -431,7 +438,7 @@ terminal('openssl s_client -connect api.example.com:443 -servername api.example.
 When debugging spans auth → fetch → paginate → validate, use `execute_code`. Variables persist for the script, results print to stdout, no risk of token spam in your context:
 
 ```python
-execute_code('''
+execute_code("""
 import os, requests
 
 token = os.environ["API_TOKEN"]
@@ -453,7 +460,7 @@ while True:
     if not cursor:
         break
 print(f"users={len(all_users)}")
-''')
+""")
 ```
 
 ### web_extract — for vendor API docs

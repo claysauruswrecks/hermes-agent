@@ -52,11 +52,14 @@ import dspy
 lm = dspy.Claude(model="claude-sonnet-4-5-20250929")
 dspy.settings.configure(lm=lm)
 
+
 # Define a signature (input → output)
 class QA(dspy.Signature):
     """Answer questions with short factual answers."""
+
     question = dspy.InputField()
     answer = dspy.OutputField(desc="often between 1 and 5 words")
+
 
 # Create a module
 qa = dspy.Predict(QA)
@@ -74,18 +77,23 @@ import dspy
 lm = dspy.Claude(model="claude-sonnet-4-5-20250929")
 dspy.settings.configure(lm=lm)
 
+
 # Use ChainOfThought for better reasoning
 class MathProblem(dspy.Signature):
     """Solve math word problems."""
+
     problem = dspy.InputField()
     answer = dspy.OutputField(desc="numerical answer")
+
 
 # ChainOfThought generates reasoning steps automatically
 cot = dspy.ChainOfThought(MathProblem)
 
-response = cot(problem="If John has 5 apples and gives 2 to Mary, how many does he have?")
+response = cot(
+    problem="If John has 5 apples and gives 2 to Mary, how many does he have?"
+)
 print(response.rationale)  # Shows reasoning steps
-print(response.answer)     # "3"
+print(response.answer)  # "3"
 ```
 
 ## Core Concepts
@@ -98,11 +106,14 @@ Signatures define the structure of your AI task (inputs → outputs):
 # Inline signature (simple)
 qa = dspy.Predict("question -> answer")
 
+
 # Class signature (detailed)
 class Summarize(dspy.Signature):
     """Summarize text into key points."""
+
     text = dspy.InputField()
     summary = dspy.OutputField(desc="bullet points, 3-5 items")
+
 
 summarizer = dspy.ChainOfThought(Summarize)
 ```
@@ -120,8 +131,9 @@ Basic prediction module:
 
 ```python
 predictor = dspy.Predict("context, question -> answer")
-result = predictor(context="Paris is the capital of France",
-                   question="What is the capital?")
+result = predictor(
+    context="Paris is the capital of France", question="What is the capital?"
+)
 ```
 
 #### dspy.ChainOfThought
@@ -131,7 +143,7 @@ Generates reasoning steps before answering:
 cot = dspy.ChainOfThought("question -> answer")
 result = cot(question="Why is the sky blue?")
 print(result.rationale)  # Reasoning steps
-print(result.answer)     # Final answer
+print(result.answer)  # Final answer
 ```
 
 #### dspy.ReAct
@@ -140,15 +152,19 @@ Agent-like reasoning with tools:
 ```python
 from dspy.predict import ReAct
 
+
 class SearchQA(dspy.Signature):
     """Answer questions using search."""
+
     question = dspy.InputField()
     answer = dspy.OutputField()
+
 
 def search_tool(query: str) -> str:
     """Search Wikipedia."""
     # Your search implementation
     return results
+
 
 react = ReAct(SearchQA, tools=[search_tool])
 result = react(question="When was Python created?")
@@ -179,9 +195,11 @@ trainset = [
     dspy.Example(question="What is 3+5?", answer="8").with_inputs("question"),
 ]
 
+
 # Define metric
 def validate_answer(example, pred, trace=None):
     return example.answer == pred.answer
+
 
 # Optimize
 optimizer = BootstrapFewShot(metric=validate_answer, max_bootstrapped_demos=3)
@@ -196,17 +214,9 @@ Iteratively improves prompts:
 ```python
 from dspy.teleprompt import MIPRO
 
-optimizer = MIPRO(
-    metric=validate_answer,
-    num_candidates=10,
-    init_temperature=1.0
-)
+optimizer = MIPRO(metric=validate_answer, num_candidates=10, init_temperature=1.0)
 
-optimized_cot = optimizer.compile(
-    cot,
-    trainset=trainset,
-    num_trials=100
-)
+optimized_cot = optimizer.compile(cot, trainset=trainset, num_trials=100)
 ```
 
 #### BootstrapFinetune
@@ -228,6 +238,7 @@ optimized_module = optimizer.compile(qa, trainset=trainset)
 ```python
 import dspy
 
+
 class MultiHopQA(dspy.Module):
     def __init__(self):
         super().__init__()
@@ -247,6 +258,7 @@ class MultiHopQA(dspy.Module):
         answer = self.generate_answer(context=context, question=question).answer
         return dspy.Prediction(answer=answer, context=context)
 
+
 # Use the pipeline
 qa_system = MultiHopQA()
 result = qa_system(question="Who wrote the book that inspired the movie Blade Runner?")
@@ -259,10 +271,8 @@ import dspy
 from dspy.retrieve.chromadb_rm import ChromadbRM
 
 # Configure retriever
-retriever = ChromadbRM(
-    collection_name="documents",
-    persist_directory="./chroma_db"
-)
+retriever = ChromadbRM(collection_name="documents", persist_directory="./chroma_db")
+
 
 class RAG(dspy.Module):
     def __init__(self, num_passages=3):
@@ -273,6 +283,7 @@ class RAG(dspy.Module):
     def forward(self, question):
         context = self.retrieve(question).passages
         return self.generate(context=context, question=question)
+
 
 # Create and optimize
 rag = RAG()
@@ -295,7 +306,7 @@ lm = dspy.Claude(
     model="claude-sonnet-4-5-20250929",
     api_key="your-api-key",  # Or set ANTHROPIC_API_KEY env var
     max_tokens=1000,
-    temperature=0.7
+    temperature=0.7,
 )
 dspy.settings.configure(lm=lm)
 ```
@@ -303,21 +314,14 @@ dspy.settings.configure(lm=lm)
 ### OpenAI
 
 ```python
-lm = dspy.OpenAI(
-    model="gpt-4",
-    api_key="your-api-key",
-    max_tokens=1000
-)
+lm = dspy.OpenAI(model="gpt-4", api_key="your-api-key", max_tokens=1000)
 dspy.settings.configure(lm=lm)
 ```
 
 ### Local Models (Ollama)
 
 ```python
-lm = dspy.OllamaLocal(
-    model="llama3.1",
-    base_url="http://localhost:11434"
-)
+lm = dspy.OllamaLocal(model="llama3.1", base_url="http://localhost:11434")
 dspy.settings.configure(lm=lm)
 ```
 
@@ -343,20 +347,24 @@ with dspy.settings.context(lm=strong_lm):
 ```python
 from pydantic import BaseModel, Field
 
+
 class PersonInfo(BaseModel):
     name: str = Field(description="Full name")
     age: int = Field(description="Age in years")
     occupation: str = Field(description="Current job")
 
+
 class ExtractPerson(dspy.Signature):
     """Extract person information from text."""
+
     text = dspy.InputField()
     person: PersonInfo = dspy.OutputField()
+
 
 extractor = dspy.TypedPredictor(ExtractPerson)
 result = extractor(text="John Doe is a 35-year-old software engineer.")
 print(result.person.name)  # "John Doe"
-print(result.person.age)   # 35
+print(result.person.age)  # 35
 ```
 
 ### Pattern 2: Assertion-Driven Optimization
@@ -364,6 +372,7 @@ print(result.person.age)   # 35
 ```python
 import dspy
 from dspy.primitives.assertions import assert_transform_module, backtrack_handler
+
 
 class MathQA(dspy.Module):
     def __init__(self):
@@ -377,7 +386,7 @@ class MathQA(dspy.Module):
         dspy.Assert(
             isinstance(float(solution), float),
             "Solution must be a number",
-            backtrack=backtrack_handler
+            backtrack=backtrack_handler,
         )
 
         return dspy.Prediction(solution=solution)
@@ -388,6 +397,7 @@ class MathQA(dspy.Module):
 ```python
 import dspy
 from collections import Counter
+
 
 class ConsistentQA(dspy.Module):
     def __init__(self, num_samples=5):
@@ -424,7 +434,9 @@ class RerankedRAG(dspy.Module):
         # Rerank passages
         scored = []
         for passage in passages:
-            score = float(self.rerank(question=question, passage=passage).relevance_score)
+            score = float(
+                self.rerank(question=question, passage=passage).relevance_score
+            )
             scored.append((score, passage))
 
         # Take top 3
@@ -443,6 +455,7 @@ class RerankedRAG(dspy.Module):
 def exact_match(example, pred, trace=None):
     """Exact match metric."""
     return example.answer.lower() == pred.answer.lower()
+
 
 def f1_score(example, pred, trace=None):
     """F1 score for text overlap."""
@@ -468,10 +481,7 @@ from dspy.evaluate import Evaluate
 
 # Create evaluator
 evaluator = Evaluate(
-    devset=testset,
-    metric=exact_match,
-    num_threads=4,
-    display_progress=True
+    devset=testset, metric=exact_match, num_threads=4, display_progress=True
 )
 
 # Evaluate model
@@ -507,9 +517,11 @@ class Task(dspy.Signature):
     input = dspy.InputField()
     output = dspy.OutputField()
 
+
 # ✅ Good: Descriptive
 class SummarizeArticle(dspy.Signature):
     """Summarize news articles into 3-5 key points."""
+
     article = dspy.InputField(desc="full article text")
     summary = dspy.OutputField(desc="bullet points, 3-5 items")
 ```

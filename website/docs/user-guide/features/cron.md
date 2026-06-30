@@ -389,9 +389,14 @@ Ping me on Telegram if RAM is over 85%, every 5 minutes.
 Hermes will write the check script to `~/.hermes/scripts/` via `write_file`, then call:
 
 ```python
-cronjob(action="create", schedule="every 5m",
-        script="memory-watchdog.sh", no_agent=True,
-        deliver="telegram", name="memory-watchdog")
+cronjob(
+    action="create",
+    schedule="every 5m",
+    script="memory-watchdog.sh",
+    no_agent=True,
+    deliver="telegram",
+    name="memory-watchdog",
+)
 ```
 
 It picks `no_agent=True` automatically when the message content is fully determined by the script (watchdogs, threshold alerts, heartbeats). The same tool also lets the agent pause, resume, edit, and remove jobs — so the whole lifecycle is chat-driven without anyone touching the CLI.
@@ -567,10 +572,11 @@ If your cron job attaches a pre-check script (via `script=`), the script can dec
 ```python
 # pre-check script
 import json, sys
+
 latest = fetch_latest_issue_count()
 prev = read_state("issue_count")
 if latest == prev:
-    print(json.dumps({"wakeAgent": False}))   # skip this tick
+    print(json.dumps({"wakeAgent": False}))  # skip this tick
     sys.exit(0)
 write_state("issue_count", latest)
 print(json.dumps({"wakeAgent": True, "context": {"new_issues": latest - prev}}))
@@ -633,6 +639,7 @@ cronjob(action="create", name="nightly-analysis",
 #!/usr/bin/env python
 # ~/.hermes/scripts/new-rows.py
 import json, sqlite3
+
 conn = sqlite3.connect("/home/me/data/app.db")
 n = conn.execute(
     "SELECT COUNT(*) FROM messages WHERE ts > strftime('%s','now','-2 hours')"

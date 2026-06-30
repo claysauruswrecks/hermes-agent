@@ -139,8 +139,8 @@ project-name/
 MONO = "Menlo"  # define once at top of file
 
 Text("Fourier Series", font_size=48, font=MONO, weight=BOLD)  # titles
-Text("n=1: sin(x)", font_size=20, font=MONO)                  # labels
-MathTex(r"\nabla L")                                            # math (uses LaTeX)
+Text("n=1: sin(x)", font_size=20, font=MONO)  # labels
+MathTex(r"\nabla L")  # math (uses LaTeX)
 ```
 
 最小 `font_size=18` 以保证可读性。
@@ -172,10 +172,13 @@ SECONDARY = "#83C167"
 ACCENT = "#FFFF00"
 MONO = "Menlo"
 
+
 class Scene1_Introduction(Scene):
     def construct(self):
         self.camera.background_color = BG
-        title = Text("Why Does This Work?", font_size=48, color=PRIMARY, weight=BOLD, font=MONO)
+        title = Text(
+            "Why Does This Work?", font_size=48, color=PRIMARY, weight=BOLD, font=MONO
+        )
         self.add_subcaption("Why does this work?", duration=2)
         self.play(Write(title), run_time=1.5)
         self.wait(1.0)

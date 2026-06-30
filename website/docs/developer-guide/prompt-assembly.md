@@ -165,7 +165,9 @@ def load_soul_md() -> Optional[str]:
         return None
     content = soul_path.read_text(encoding="utf-8").strip()
     content = _scan_context_content(content, "SOUL.md")  # Security scan
-    content = _truncate_content(content, "SOUL.md")       # Cap defaults to 20k chars, configurable
+    content = _truncate_content(
+        content, "SOUL.md"
+    )  # Cap defaults to 20k chars, configurable
     return content
 ```
 
@@ -194,9 +196,9 @@ def build_context_files_prompt(cwd=None, skip_soul=False):
 
     # Priority: first match wins — only ONE project context loaded
     project_context = (
-        _load_hermes_md(cwd_path)       # 1. .hermes.md / HERMES.md (walks to git root)
-        or _load_agents_md(cwd_path)    # 2. AGENTS.md (cwd only)
-        or _load_claude_md(cwd_path)    # 3. CLAUDE.md (cwd only)
+        _load_hermes_md(cwd_path)  # 1. .hermes.md / HERMES.md (walks to git root)
+        or _load_agents_md(cwd_path)  # 2. AGENTS.md (cwd only)
+        or _load_claude_md(cwd_path)  # 3. CLAUDE.md (cwd only)
         or _load_cursorrules(cwd_path)  # 4. .cursorrules / .cursor/rules/*.mdc
     )
 
@@ -216,8 +218,7 @@ def build_context_files_prompt(cwd=None, skip_soul=False):
     return (
         "# Project Context\n\n"
         "The following project context files have been loaded "
-        "and should be followed:\n\n"
-        + "\n".join(sections)
+        "and should be followed:\n\n" + "\n".join(sections)
     )
 ```
 

@@ -729,9 +729,11 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
+
 @router.get("/data")
 async def get_data():
     return {"items": ["one", "two", "three"]}
+
 
 @router.post("/action")
 async def do_action(body: dict):
@@ -756,6 +758,7 @@ from hermes_cli.config import load_config
 
 router = APIRouter()
 
+
 @router.get("/session-count")
 async def session_count():
     db = SessionDB()
@@ -764,6 +767,7 @@ async def session_count():
         return {"count": count}
     finally:
         db.close()
+
 
 @router.get("/config-snapshot")
 async def config_snapshot():

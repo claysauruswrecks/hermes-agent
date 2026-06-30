@@ -71,8 +71,8 @@ run = wandb.init(
         "learning_rate": 0.001,
         "epochs": 10,
         "batch_size": 32,
-        "architecture": "ResNet50"
-    }
+        "architecture": "ResNet50",
+    },
 )
 
 # Training loop
@@ -87,7 +87,7 @@ for epoch in range(run.config.epochs):
         "train/loss": train_loss,
         "val/loss": val_loss,
         "train/accuracy": train_acc,
-        "val/accuracy": val_acc
+        "val/accuracy": val_acc,
     })
 
 # Finish the run
@@ -101,10 +101,7 @@ import torch
 import wandb
 
 # Initialize
-wandb.init(project="pytorch-demo", config={
-    "lr": 0.001,
-    "epochs": 10
-})
+wandb.init(project="pytorch-demo", config={"lr": 0.001, "epochs": 10})
 
 # Access config
 config = wandb.config
@@ -123,11 +120,7 @@ for epoch in range(config.epochs):
 
         # Log every 100 batches
         if batch_idx % 100 == 0:
-            wandb.log({
-                "loss": loss.item(),
-                "epoch": epoch,
-                "batch": batch_idx
-            })
+            wandb.log({"loss": loss.item(), "epoch": epoch, "batch": batch_idx})
 
 # Save model
 torch.save(model.state_dict(), "model.pth")
@@ -148,8 +141,8 @@ wandb.finish()
 run = wandb.init(
     project="image-classification",
     name="resnet50-experiment-1",  # Optional run name
-    tags=["baseline", "resnet"],    # Organize with tags
-    notes="First baseline run"      # Add notes
+    tags=["baseline", "resnet"],  # Organize with tags
+    notes="First baseline run",  # Add notes
 )
 
 # Each run has unique ID
@@ -166,16 +159,14 @@ config = {
     # Model architecture
     "model": "ResNet50",
     "pretrained": True,
-
     # Training params
     "learning_rate": 0.001,
     "batch_size": 32,
     "epochs": 50,
     "optimizer": "Adam",
-
     # Data params
     "dataset": "ImageNet",
-    "augmentation": "standard"
+    "augmentation": "standard",
 }
 
 wandb.init(project="my-project", config=config)
@@ -198,7 +189,7 @@ wandb.log({
     "val/loss": val_loss,
     "val/accuracy": val_acc,
     "learning_rate": current_lr,
-    "epoch": epoch
+    "epoch": epoch,
 })
 
 # Log with custom x-axis
@@ -223,20 +214,20 @@ import wandb
 
 # Save model checkpoint
 checkpoint = {
-    'epoch': epoch,
-    'model_state_dict': model.state_dict(),
-    'optimizer_state_dict': optimizer.state_dict(),
-    'loss': loss,
+    "epoch": epoch,
+    "model_state_dict": model.state_dict(),
+    "optimizer_state_dict": optimizer.state_dict(),
+    "loss": loss,
 }
 
-torch.save(checkpoint, 'checkpoint.pth')
+torch.save(checkpoint, "checkpoint.pth")
 
 # Upload to W&B
-wandb.save('checkpoint.pth')
+wandb.save("checkpoint.pth")
 
 # Or use Artifacts (recommended)
-artifact = wandb.Artifact('model', type='model')
-artifact.add_file('checkpoint.pth')
+artifact = wandb.Artifact("model", type="model")
+artifact.add_file("checkpoint.pth")
 wandb.log_artifact(artifact)
 ```
 
@@ -248,29 +239,14 @@ Automatically search for optimal hyperparameters.
 
 ```python
 sweep_config = {
-    'method': 'bayes',  # or 'grid', 'random'
-    'metric': {
-        'name': 'val/accuracy',
-        'goal': 'maximize'
+    "method": "bayes",  # or 'grid', 'random'
+    "metric": {"name": "val/accuracy", "goal": "maximize"},
+    "parameters": {
+        "learning_rate": {"distribution": "log_uniform", "min": 1e-5, "max": 1e-1},
+        "batch_size": {"values": [16, 32, 64, 128]},
+        "optimizer": {"values": ["adam", "sgd", "rmsprop"]},
+        "dropout": {"distribution": "uniform", "min": 0.1, "max": 0.5},
     },
-    'parameters': {
-        'learning_rate': {
-            'distribution': 'log_uniform',
-            'min': 1e-5,
-            'max': 1e-1
-        },
-        'batch_size': {
-            'values': [16, 32, 64, 128]
-        },
-        'optimizer': {
-            'values': ['adam', 'sgd', 'rmsprop']
-        },
-        'dropout': {
-            'distribution': 'uniform',
-            'min': 0.1,
-            'max': 0.5
-        }
-    }
 }
 
 # Initialize sweep
@@ -299,10 +275,8 @@ def train():
         val_acc = validate(model)
 
         # Log metrics
-        wandb.log({
-            "train/loss": train_loss,
-            "val/accuracy": val_acc
-        })
+        wandb.log({"train/loss": train_loss, "val/accuracy": val_acc})
+
 
 # Run sweep
 wandb.agent(sweep_id, function=train, count=50)  # Run 50 trials
@@ -313,29 +287,27 @@ wandb.agent(sweep_id, function=train, count=50)  # Run 50 trials
 ```python
 # Grid search - exhaustive
 sweep_config = {
-    'method': 'grid',
-    'parameters': {
-        'lr': {'values': [0.001, 0.01, 0.1]},
-        'batch_size': {'values': [16, 32, 64]}
-    }
+    "method": "grid",
+    "parameters": {
+        "lr": {"values": [0.001, 0.01, 0.1]},
+        "batch_size": {"values": [16, 32, 64]},
+    },
 }
 
 # Random search
 sweep_config = {
-    'method': 'random',
-    'parameters': {
-        'lr': {'distribution': 'uniform', 'min': 0.0001, 'max': 0.1},
-        'dropout': {'distribution': 'uniform', 'min': 0.1, 'max': 0.5}
-    }
+    "method": "random",
+    "parameters": {
+        "lr": {"distribution": "uniform", "min": 0.0001, "max": 0.1},
+        "dropout": {"distribution": "uniform", "min": 0.1, "max": 0.5},
+    },
 }
 
 # Bayesian optimization (recommended)
 sweep_config = {
-    'method': 'bayes',
-    'metric': {'name': 'val/loss', 'goal': 'minimize'},
-    'parameters': {
-        'lr': {'distribution': 'log_uniform', 'min': 1e-5, 'max': 1e-1}
-    }
+    "method": "bayes",
+    "metric": {"name": "val/loss", "goal": "minimize"},
+    "parameters": {"lr": {"distribution": "log_uniform", "min": 1e-5, "max": 1e-1}},
 }
 ```
 
@@ -348,15 +320,15 @@ Track datasets, models, and other files with lineage.
 ```python
 # Create artifact
 artifact = wandb.Artifact(
-    name='training-dataset',
-    type='dataset',
-    description='ImageNet training split',
-    metadata={'size': '1.2M images', 'split': 'train'}
+    name="training-dataset",
+    type="dataset",
+    description="ImageNet training split",
+    metadata={"size": "1.2M images", "split": "train"},
 )
 
 # Add files
-artifact.add_file('data/train.csv')
-artifact.add_dir('data/images/')
+artifact.add_file("data/train.csv")
+artifact.add_dir("data/images/")
 
 # Log artifact
 wandb.log_artifact(artifact)
@@ -369,7 +341,7 @@ wandb.log_artifact(artifact)
 run = wandb.init(project="my-project")
 
 # Download artifact
-artifact = run.use_artifact('training-dataset:latest')
+artifact = run.use_artifact("training-dataset:latest")
 artifact_dir = artifact.download()
 
 # Use the data
@@ -381,16 +353,16 @@ data = load_data(f"{artifact_dir}/train.csv")
 ```python
 # Log model as artifact
 model_artifact = wandb.Artifact(
-    name='resnet50-model',
-    type='model',
-    metadata={'architecture': 'ResNet50', 'accuracy': 0.95}
+    name="resnet50-model",
+    type="model",
+    metadata={"architecture": "ResNet50", "accuracy": 0.95},
 )
 
-model_artifact.add_file('model.pth')
-wandb.log_artifact(model_artifact, aliases=['best', 'production'])
+model_artifact.add_file("model.pth")
+wandb.log_artifact(model_artifact, aliases=["best", "production"])
 
 # Link to model registry
-run.link_artifact(model_artifact, 'model-registry/production-models')
+run.link_artifact(model_artifact, "model-registry/production-models")
 ```
 
 ## Integration Examples
@@ -410,7 +382,7 @@ training_args = TrainingArguments(
     report_to="wandb",  # Enable W&B logging
     run_name="bert-finetuning",
     logging_steps=100,
-    save_steps=500
+    save_steps=500,
 )
 
 # Trainer automatically logs to W&B
@@ -418,7 +390,7 @@ trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
-    eval_dataset=eval_dataset
+    eval_dataset=eval_dataset,
 )
 
 trainer.train()
@@ -434,14 +406,11 @@ import wandb
 # Create W&B logger
 wandb_logger = WandbLogger(
     project="lightning-demo",
-    log_model=True  # Log model checkpoints
+    log_model=True,  # Log model checkpoints
 )
 
 # Use with Trainer
-trainer = Trainer(
-    logger=wandb_logger,
-    max_epochs=10
-)
+trainer = Trainer(logger=wandb_logger, max_epochs=10)
 
 trainer.fit(model, datamodule=dm)
 ```
@@ -457,10 +426,11 @@ wandb.init(project="keras-demo")
 
 # Add callback
 model.fit(
-    x_train, y_train,
+    x_train,
+    y_train,
     validation_data=(x_val, y_val),
     epochs=10,
-    callbacks=[WandbCallback()]  # Auto-logs metrics
+    callbacks=[WandbCallback()],  # Auto-logs metrics
 )
 ```
 
@@ -477,12 +447,11 @@ ax.plot(x, y)
 wandb.log({"custom_plot": wandb.Image(fig)})
 
 # Log confusion matrix
-wandb.log({"conf_mat": wandb.plot.confusion_matrix(
-    probs=None,
-    y_true=ground_truth,
-    preds=predictions,
-    class_names=class_names
-)})
+wandb.log({
+    "conf_mat": wandb.plot.confusion_matrix(
+        probs=None, y_true=ground_truth, preds=predictions, class_names=class_names
+    )
+})
 ```
 
 ### Reports
@@ -502,7 +471,7 @@ wandb.init(
     project="my-project",
     tags=["baseline", "resnet50", "imagenet"],
     group="resnet-experiments",  # Group related runs
-    job_type="train"             # Type of job
+    job_type="train",  # Type of job
 )
 ```
 
@@ -513,27 +482,21 @@ wandb.init(
 wandb.log({
     "gpu/util": gpu_utilization,
     "gpu/memory": gpu_memory_used,
-    "cpu/util": cpu_utilization
+    "cpu/util": cpu_utilization,
 })
 
 # Log code version
 wandb.log({"git_commit": git_commit_hash})
 
 # Log data splits
-wandb.log({
-    "data/train_size": len(train_dataset),
-    "data/val_size": len(val_dataset)
-})
+wandb.log({"data/train_size": len(train_dataset), "data/val_size": len(val_dataset)})
 ```
 
 ### 3. Use Descriptive Names
 
 ```python
 # ✅ Good: Descriptive run names
-wandb.init(
-    project="nlp-classification",
-    name="bert-base-lr0.001-bs32-epoch10"
-)
+wandb.init(project="nlp-classification", name="bert-base-lr0.001-bs32-epoch10")
 
 # ❌ Bad: Generic names
 wandb.init(project="nlp", name="run1")
@@ -543,14 +506,13 @@ wandb.init(project="nlp", name="run1")
 
 ```python
 # Save final model
-artifact = wandb.Artifact('final-model', type='model')
-artifact.add_file('model.pth')
+artifact = wandb.Artifact("final-model", type="model")
+artifact.add_file("model.pth")
 wandb.log_artifact(artifact)
 
 # Save predictions for analysis
 predictions_table = wandb.Table(
-    columns=["id", "input", "prediction", "ground_truth"],
-    data=predictions_data
+    columns=["id", "input", "prediction", "ground_truth"], data=predictions_data
 )
 wandb.log({"predictions": predictions_table})
 ```

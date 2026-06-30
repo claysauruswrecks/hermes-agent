@@ -33,9 +33,7 @@ def isolated_home(tmp_path, monkeypatch):
     monkeypatch.delenv("HERMES_MAX_TOKENS", raising=False)
 
     _saved = {
-        k: v
-        for k, v in sys.modules.items()
-        if k.startswith(("hermes_cli", "gateway"))
+        k: v for k, v in sys.modules.items() if k.startswith(("hermes_cli", "gateway"))
     }
 
     def write_cfg(body: str) -> None:

@@ -60,9 +60,10 @@ When fidelity matters (the model's chart styling must match the deck exactly), r
 
 ```python
 from pptx.util import Inches
-slide.shapes.add_picture("./out/charts/football_field.png",
-                         Inches(1), Inches(2),
-                         width=Inches(8))
+
+slide.shapes.add_picture(
+    "./out/charts/football_field.png", Inches(1), Inches(2), width=Inches(8)
+)
 ```
 
 ### No external sends
@@ -90,9 +91,9 @@ slide.shapes.title.text = "Valuation implies $38–$52 per share across methodol
 
 # Add a table bound to model outputs
 rows, cols = 5, 4
-tbl_shape = slide.shapes.add_table(rows, cols,
-                                   Inches(0.5), Inches(1.5),
-                                   Inches(9), Inches(3))
+tbl_shape = slide.shapes.add_table(
+    rows, cols, Inches(0.5), Inches(1.5), Inches(9), Inches(3)
+)
 tbl = tbl_shape.table
 headers = ["Methodology", "Low ($)", "Mid ($)", "High ($)"]
 for c, h in enumerate(headers):
@@ -100,10 +101,10 @@ for c, h in enumerate(headers):
 
 # In a real deck, read these from the model workbook with openpyxl
 data = [
-    ("Trading comps",     "35", "41", "48"),
-    ("Precedent M&A",     "39", "45", "52"),
-    ("DCF (base)",        "36", "43", "51"),
-    ("LBO (10% IRR)",     "33", "38", "44"),
+    ("Trading comps", "35", "41", "48"),
+    ("Precedent M&A", "39", "45", "52"),
+    ("DCF (base)", "36", "43", "51"),
+    ("LBO (10% IRR)", "33", "38", "44"),
 ]
 for r, row in enumerate(data, start=1):
     for c, val in enumerate(row):
@@ -112,8 +113,9 @@ for r, row in enumerate(data, start=1):
 # Embed a chart rendered from the model
 slide = prs.slides.add_slide(prs.slide_layouts[5])
 slide.shapes.title.text = "Football field — current price $42"
-slide.shapes.add_picture("./out/charts/football_field.png",
-                         Inches(1), Inches(1.8), width=Inches(8))
+slide.shapes.add_picture(
+    "./out/charts/football_field.png", Inches(1), Inches(1.8), width=Inches(8)
+)
 
 Path("./out").mkdir(exist_ok=True)
 prs.save("./out/pitch-aurora.pptx")
@@ -127,14 +129,17 @@ Read named ranges or specific cells from your Excel model so deck numbers never 
 from openpyxl import load_workbook
 
 wb = load_workbook("./out/model.xlsx", data_only=True)
+
+
 def nr(name):
     """Resolve a named range to its current computed value."""
     rng = wb.defined_names[name]
     sheet, coord = next(rng.destinations)
     return wb[sheet][coord].value
 
+
 revenue_fy24 = nr("RevenueFY24")
-implied_mid  = nr("ImpliedSharePriceBase")
+implied_mid = nr("ImpliedSharePriceBase")
 ```
 
 Then build deck content using those values:

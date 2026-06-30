@@ -45,7 +45,11 @@ read_file("docs/plans/feature-plan.md")
 
 # Create todo list with all tasks
 todo([
-    {"id": "task-1", "content": "Create User model with email field", "status": "pending"},
+    {
+        "id": "task-1",
+        "content": "Create User model with email field",
+        "status": "pending",
+    },
     {"id": "task-2", "content": "Add password hashing utility", "status": "pending"},
     {"id": "task-3", "content": "Create login endpoint", "status": "pending"},
 ])
@@ -85,7 +89,7 @@ delegate_task(
     - Tests use pytest, run from project root
     - bcrypt already in requirements.txt
     """,
-    toolsets=['terminal', 'file']
+    toolsets=["terminal", "file"],
 )
 ```
 
@@ -112,7 +116,7 @@ delegate_task(
 
     OUTPUT: PASS or list of specific spec gaps to fix.
     """,
-    toolsets=['file']
+    toolsets=["file"],
 )
 ```
 
@@ -144,7 +148,7 @@ delegate_task(
     - Minor Issues: [optional]
     - Verdict: APPROVED or REQUEST_CHANGES
     """,
-    toolsets=['file']
+    toolsets=["file"],
 )
 ```
 
@@ -153,7 +157,16 @@ delegate_task(
 #### Step 4: Mark Complete
 
 ```python
-todo([{"id": "task-1", "content": "Create User model with email field", "status": "completed"}], merge=True)
+todo(
+    [
+        {
+            "id": "task-1",
+            "content": "Create User model with email field",
+            "status": "completed",
+        }
+    ],
+    merge=True,
+)
 ```
 
 ### 3. Final Review
@@ -170,7 +183,7 @@ delegate_task(
     - All tests passing?
     - Ready for merge?
     """,
-    toolsets=['terminal', 'file']
+    toolsets=["terminal", "file"],
 )
 ```
 

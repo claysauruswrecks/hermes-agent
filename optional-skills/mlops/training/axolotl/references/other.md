@@ -767,15 +767,11 @@ ORIGINAL_QKV_CODE = """
     query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)
     key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)
     value_states = self.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
-""".lstrip(
-    "\n"
-)
+""".lstrip("\n")
 
 ORIGINAL_O_CODE = """
     attn_output = self.o_proj(attn_output)
-""".lstrip(
-    "\n"
-)
+""".lstrip("\n")
 ```
 
 Example 2 (python):
@@ -785,15 +781,11 @@ PATCHED_QKV_CODE = """
     query_states = query_states.view(hidden_shape).transpose(1, 2)
     key_states = key_states.view(hidden_shape).transpose(1, 2)
     value_states = value_states.view(hidden_shape).transpose(1, 2)
-""".lstrip(
-    "\n"
-)
+""".lstrip("\n")
 
 PATCHED_O_CODE = """
     attn_output = self.apply_o(attn_output)
-""".lstrip(
-    "\n"
-)
+""".lstrip("\n")
 ```
 
 Example 3 (yaml):

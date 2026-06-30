@@ -57,8 +57,7 @@ def build_catalog() -> dict:
                     ),
                 },
                 "models": [
-                    {"id": mid, "description": desc}
-                    for mid, desc in OPENROUTER_MODELS
+                    {"id": mid, "description": desc} for mid, desc in OPENROUTER_MODELS
                 ],
             },
             "nous": {
@@ -69,10 +68,7 @@ def build_catalog() -> dict:
                         "(partition_nous_models_by_tier), not this manifest."
                     ),
                 },
-                "models": [
-                    {"id": mid}
-                    for mid in _PROVIDER_MODELS.get("nous", [])
-                ],
+                "models": [{"id": mid} for mid in _PROVIDER_MODELS.get("nous", [])],
             },
         },
     }

@@ -319,18 +319,19 @@ minimum subset you'll usually touch — read `run_agent.py` for the full list.
 
 ```python
 class AIAgent:
-    def __init__(self,
+    def __init__(
+        self,
         base_url: str = None,
         api_key: str = None,
         provider: str = None,
-        api_mode: str = None,              # "chat_completions" | "codex_responses" | ...
-        model: str = "",                   # empty → resolved from config/provider later
-        max_iterations: int = 90,          # tool-calling iterations (shared with subagents)
+        api_mode: str = None,  # "chat_completions" | "codex_responses" | ...
+        model: str = "",  # empty → resolved from config/provider later
+        max_iterations: int = 90,  # tool-calling iterations (shared with subagents)
         enabled_toolsets: list = None,
         disabled_toolsets: list = None,
         quiet_mode: bool = False,
         save_trajectories: bool = False,
-        platform: str = None,              # "cli", "telegram", etc.
+        platform: str = None,  # "cli", "telegram", etc.
         session_id: str = None,
         skip_context_files: bool = False,
         skip_memory: bool = False,
@@ -342,8 +343,13 @@ class AIAgent:
     def chat(self, message: str) -> str:
         """Simple interface — returns final response string."""
 
-    def run_conversation(self, user_message: str, system_message: str = None,
-                         conversation_history: list = None, task_id: str = None) -> dict:
+    def run_conversation(
+        self,
+        user_message: str,
+        system_message: str = None,
+        conversation_history: list = None,
+        task_id: str = None,
+    ) -> dict:
         """Full interface — returns dict with final_response + messages."""
 ```
 
@@ -353,10 +359,14 @@ The core loop is inside `run_conversation()` — entirely synchronous, with
 interrupt checks, budget tracking, and a one-turn grace call:
 
 ```python
-while (api_call_count < self.max_iterations and self.iteration_budget.remaining > 0) \
-        or self._budget_grace_call:
-    if self._interrupt_requested: break
-    response = client.chat.completions.create(model=model, messages=messages, tools=tool_schemas)
+while (
+    api_call_count < self.max_iterations and self.iteration_budget.remaining > 0
+) or self._budget_grace_call:
+    if self._interrupt_requested:
+        break
+    response = client.chat.completions.create(
+        model=model, messages=messages, tools=tool_schemas
+    )
     if response.tool_calls:
         for tool_call in response.tool_calls:
             result = handle_function_call(tool_call.name, tool_call.args, task_id)
@@ -396,8 +406,15 @@ All slash commands are defined in a central `COMMAND_REGISTRY` list of `CommandD
 
 1. Add a `CommandDef` entry to `COMMAND_REGISTRY` in `hermes_cli/commands.py`:
 ```python
-CommandDef("mycommand", "Description of what it does", "Session",
-           aliases=("mc",), args_hint="[arg]"),
+(
+    CommandDef(
+        "mycommand",
+        "Description of what it does",
+        "Session",
+        aliases=("mc",),
+        args_hint="[arg]",
+    ),
+)
 ```
 2. Add handler in `HermesCLI.process_command()` in `cli.py`:
 ```python
@@ -526,17 +543,22 @@ Built-in/core tools require changes in **2 files**:
 import json, os
 from tools.registry import registry
 
+
 def check_requirements() -> bool:
     return bool(os.getenv("EXAMPLE_API_KEY"))
 
+
 def example_tool(param: str, task_id: str = None) -> str:
     return json.dumps({"success": True, "data": "..."})
+
 
 registry.register(
     name="example_tool",
     toolset="example",
     schema={"name": "example_tool", "description": "...", "parameters": {...}},
-    handler=lambda args, **kw: example_tool(param=args.get("param", ""), task_id=kw.get("task_id")),
+    handler=lambda args, **kw: example_tool(
+        param=args.get("param", ""), task_id=kw.get("task_id")
+    ),
     check_fn=check_requirements,
     requires_env=["EXAMPLE_API_KEY"],
 )
@@ -893,9 +915,12 @@ violate them.
    name. Verify with:
    ```python
    import re, pathlib
-   m = re.search(r'^description: (.*)$',
-                 pathlib.Path('skills/<cat>/<name>/SKILL.md').read_text(),
-                 re.MULTILINE)
+
+   m = re.search(
+       r"^description: (.*)$",
+       pathlib.Path("skills/<cat>/<name>/SKILL.md").read_text(),
+       re.MULTILINE,
+   )
    assert len(m.group(1)) <= 60, len(m.group(1))
    ```
 
@@ -1171,6 +1196,7 @@ automatically scope to the active profile.
    ```python
    # GOOD
    from hermes_constants import get_hermes_home
+
    config_path = get_hermes_home() / "config.yaml"
 
    # BAD — breaks profiles
@@ -1182,6 +1208,7 @@ automatically scope to the active profile.
    ```python
    # GOOD
    from hermes_constants import display_hermes_home
+
    print(f"Config saved to {display_hermes_home()}/config.yaml")
 
    # BAD — shows wrong path for profiles
@@ -1195,8 +1222,10 @@ automatically scope to the active profile.
 4. **Tests that mock `Path.home()` must also set `HERMES_HOME`** — since code now uses
    `get_hermes_home()` (reads env var), not `Path.home() / ".hermes"`:
    ```python
-   with patch.object(Path, "home", return_value=tmp_path), \
-        patch.dict(os.environ, {"HERMES_HOME": str(tmp_path / ".hermes")}):
+   with (
+       patch.object(Path, "home", return_value=tmp_path),
+       patch.dict(os.environ, {"HERMES_HOME": str(tmp_path / ".hermes")}),
+   ):
        ...
    ```
 

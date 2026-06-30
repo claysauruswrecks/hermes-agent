@@ -28,15 +28,15 @@ Every tool file in `tools/` calls `registry.register()` at module level to decla
 
 ```python
 registry.register(
-    name="terminal",               # Unique tool name (used in API schemas)
-    toolset="terminal",            # Toolset this tool belongs to
-    schema={...},                  # OpenAI function-calling schema (description, parameters)
-    handler=handle_terminal,       # The function that executes when the tool is called
-    check_fn=check_terminal,       # Optional: returns True/False for availability
-    requires_env=["SOME_VAR"],     # Optional: env vars needed (for UI display)
-    is_async=False,                # Whether the handler is an async coroutine
-    description="Run commands",    # Human-readable description
-    emoji="💻",                    # Emoji for spinner/progress display
+    name="terminal",  # Unique tool name (used in API schemas)
+    toolset="terminal",  # Toolset this tool belongs to
+    schema={...},  # OpenAI function-calling schema (description, parameters)
+    handler=handle_terminal,  # The function that executes when the tool is called
+    check_fn=check_terminal,  # Optional: returns True/False for availability
+    requires_env=["SOME_VAR"],  # Optional: env vars needed (for UI display)
+    is_async=False,  # Whether the handler is an async coroutine
+    description="Run commands",  # Human-readable description
+    emoji="💻",  # Emoji for spinner/progress display
 )
 ```
 
@@ -82,9 +82,9 @@ if entry.check_fn:
     try:
         available = bool(entry.check_fn())
     except Exception:
-        available = False   # Exceptions = unavailable
+        available = False  # Exceptions = unavailable
     if not available:
-        continue            # Skip this tool entirely
+        continue  # Skip this tool entirely
 ```
 
 Key behaviors:

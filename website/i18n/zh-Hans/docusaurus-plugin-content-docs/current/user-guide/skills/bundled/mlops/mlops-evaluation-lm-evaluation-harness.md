@@ -228,6 +228,7 @@ if step % eval_interval == 0:
 ```python
 from pytorch_lightning import Callback
 
+
 class EvalHarnessCallback(Callback):
     def on_validation_epoch_end(self, trainer, pl_module):
         step = trainer.global_step
@@ -320,7 +321,7 @@ models = [
     "meta-llama-Llama-2-7b-hf",
     "meta-llama-Llama-2-13b-hf",
     "mistralai-Mistral-7B-v0.1",
-    "microsoft-phi-2"
+    "microsoft-phi-2",
 ]
 
 tasks = ["mmlu", "gsm8k", "hellaswag", "truthfulqa"]

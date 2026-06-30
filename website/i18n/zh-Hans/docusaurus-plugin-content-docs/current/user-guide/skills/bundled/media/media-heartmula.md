@@ -85,6 +85,7 @@ uv pip install --upgrade transformers
 ```python
 # Re-initialize RoPE caches that were skipped during meta-device loading
 from torchtune.models.llama3_1._position_embeddings import Llama3ScaledRoPE
+
 for module in self.modules():
     if isinstance(module, Llama3ScaledRoPE) and not module.is_cache_built:
         module.rope_init()

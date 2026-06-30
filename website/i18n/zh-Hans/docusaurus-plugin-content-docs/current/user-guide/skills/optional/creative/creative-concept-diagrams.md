@@ -279,12 +279,11 @@ skill_view(name="concept-diagrams", file_path="templates/template.html")
 template = skill_view("concept-diagrams", "templates/template.html")
 
 # 2. Fill in title, subtitle, and paste your SVG
-html = template.replace(
-    "<!-- DIAGRAM TITLE HERE -->", "SN2 reaction mechanism"
-).replace(
-    "<!-- OPTIONAL SUBTITLE HERE -->", "Bimolecular nucleophilic substitution"
-).replace(
-    "<!-- PASTE SVG HERE -->", svg_content
+html = (
+    template
+    .replace("<!-- DIAGRAM TITLE HERE -->", "SN2 reaction mechanism")
+    .replace("<!-- OPTIONAL SUBTITLE HERE -->", "Bimolecular nucleophilic substitution")
+    .replace("<!-- PASTE SVG HERE -->", svg_content)
 )
 
 # 3. Write to a user-chosen path (or ./ by default)

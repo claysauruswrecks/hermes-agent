@@ -141,7 +141,7 @@ lm += "Date: " + gen("date", regex=r"\d{4}-\d{2}-\d{2}")
 lm += "Phone: " + gen("phone", regex=r"\d{3}-\d{3}-\d{4}")
 
 print(lm["email"])  # 保证为有效邮箱
-print(lm["date"])   # 保证为 YYYY-MM-DD 格式
+print(lm["date"])  # 保证为 YYYY-MM-DD 格式
 ```
 
 **工作原理：**
@@ -161,12 +161,11 @@ lm += "Sentiment: " + select(["positive", "negative", "neutral"], name="sentimen
 
 # 多选题选择
 lm += "Best answer: " + select(
-    ["A) Paris", "B) London", "C) Berlin", "D) Madrid"],
-    name="answer"
+    ["A) Paris", "B) London", "C) Berlin", "D) Madrid"], name="answer"
 )
 
 print(lm["sentiment"])  # 其中之一：positive、negative、neutral
-print(lm["answer"])     # 其中之一：A、B、C 或 D
+print(lm["answer"])  # 其中之一：A、B、C 或 D
 ```
 
 ### 3. Token 修复（Token Healing）
@@ -237,12 +236,14 @@ print(lm["person"])  # 保证为有效 JSON 结构
 ```python
 from guidance import guidance, gen, models
 
+
 @guidance
 def generate_person(lm):
     """生成包含姓名和年龄的人物信息。"""
     lm += "Name: " + gen("name", max_tokens=20, stop="\n")
     lm += "\nAge: " + gen("age", regex=r"[0-9]+", max_tokens=3)
     return lm
+
 
 # 使用该函数
 lm = models.Anthropic("claude-sonnet-4-5-20250929")
@@ -262,7 +263,7 @@ def react_agent(lm, question, tools, max_rounds=5):
 
     for i in range(max_rounds):
         # 思考
-        lm += f"Thought {i+1}: " + gen("thought", stop="\n")
+        lm += f"Thought {i + 1}: " + gen("thought", stop="\n")
 
         # 动作
         lm += "\nAction: " + select(list(tools.keys()), name="action")
@@ -290,7 +291,7 @@ from guidance import models
 
 lm = models.Anthropic(
     model="claude-sonnet-4-5-20250929",
-    api_key="your-api-key"  # 或设置 ANTHROPIC_API_KEY 环境变量
+    api_key="your-api-key",  # 或设置 ANTHROPIC_API_KEY 环境变量
 )
 ```
 
@@ -299,7 +300,7 @@ lm = models.Anthropic(
 ```python
 lm = models.OpenAI(
     model="gpt-4o-mini",
-    api_key="your-api-key"  # 或设置 OPENAI_API_KEY 环境变量
+    api_key="your-api-key",  # 或设置 OPENAI_API_KEY 环境变量
 )
 ```
 
@@ -310,7 +311,7 @@ from guidance.models import Transformers
 
 lm = Transformers(
     "microsoft/Phi-4-mini-instruct",
-    device="cuda"  # 或 "cpu"
+    device="cuda",  # 或 "cpu"
 )
 ```
 
@@ -319,11 +320,7 @@ lm = Transformers(
 ```python
 from guidance.models import LlamaCpp
 
-lm = LlamaCpp(
-    model_path="/path/to/model.gguf",
-    n_ctx=4096,
-    n_gpu_layers=35
-)
+lm = LlamaCpp(model_path="/path/to/model.gguf", n_ctx=4096, n_gpu_layers=35)
 ```
 
 ## 常用模式
@@ -342,11 +339,23 @@ with user():
     lm += "Generate a user profile with name, age, and email."
 
 with assistant():
-    lm += """{
-    "name": """ + gen("name", regex=r'"[A-Za-z ]+"', max_tokens=30) + """,
-    "age": """ + gen("age", regex=r"[0-9]+", max_tokens=3) + """,
-    "email": """ + gen("email", regex=r'"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"', max_tokens=50) + """
+    lm += (
+        """{
+    "name": """
+        + gen("name", regex=r'"[A-Za-z ]+"', max_tokens=30)
+        + """,
+    "age": """
+        + gen("age", regex=r"[0-9]+", max_tokens=3)
+        + """,
+    "email": """
+        + gen(
+            "email",
+            regex=r'"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"',
+            max_tokens=50,
+        )
+        + """
 }"""
+    )
 
 print(lm)  # 保证为有效 JSON
 ```
@@ -373,6 +382,7 @@ print(f"Confidence: {lm['confidence']}%")
 ```python
 from guidance import models, gen, guidance
 
+
 @guidance
 def chain_of_thought(lm, question):
     """逐步推理生成答案。"""
@@ -380,12 +390,13 @@ def chain_of_thought(lm, question):
 
     # 生成多个推理步骤
     for i in range(3):
-        lm += f"Step {i+1}: " + gen(f"step_{i+1}", stop="\n", max_tokens=100) + "\n"
+        lm += f"Step {i + 1}: " + gen(f"step_{i + 1}", stop="\n", max_tokens=100) + "\n"
 
     # 最终答案
     lm += "\nTherefore, the answer is: " + gen("answer", max_tokens=50)
 
     return lm
+
 
 lm = models.Anthropic("claude-sonnet-4-5-20250929")
 lm = chain_of_thought(lm, "What is 15% of 200?")
@@ -397,6 +408,7 @@ print(lm["answer"])
 
 ```python
 from guidance import models, gen, select, guidance
+
 
 @guidance(stateless=False)
 def react_agent(lm, question):
@@ -429,6 +441,7 @@ def react_agent(lm, question):
 
     return lm
 
+
 lm = models.Anthropic("claude-sonnet-4-5-20250929")
 lm = react_agent(lm, "What is 25 * 4 + 10?")
 print(lm["answer"])
@@ -438,6 +451,7 @@ print(lm["answer"])
 
 ```python
 from guidance import models, gen, guidance
+
 
 @guidance
 def extract_entities(lm, text):
@@ -457,6 +471,7 @@ def extract_entities(lm, text):
     lm += "Location: " + gen("location", stop="\n", max_tokens=30) + "\n"
 
     return lm
+
 
 text = "Tim Cook announced at Apple Park on 2024-09-15 in Cupertino."
 
@@ -518,6 +533,7 @@ def generate_person(lm):
     lm += "Name: " + gen("name", stop="\n")
     lm += "\nAge: " + gen("age", regex=r"[0-9]+")
     return lm
+
 
 # 多次使用
 lm = generate_person(lm)

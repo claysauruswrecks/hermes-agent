@@ -135,7 +135,7 @@ from llama_cpp import Llama
 llm = Llama(
     model_path="./model-q4_k_m.gguf",
     n_ctx=4096,
-    n_gpu_layers=35,     # 0 为 CPU，99 为全部卸载到 GPU
+    n_gpu_layers=35,  # 0 为 CPU，99 为全部卸载到 GPU
     n_threads=8,
 )
 
@@ -150,7 +150,7 @@ llm = Llama(
     model_path="./model-q4_k_m.gguf",
     n_ctx=4096,
     n_gpu_layers=35,
-    chat_format="llama-3",   # 或 "chatml"、"mistral" 等
+    chat_format="llama-3",  # 或 "chatml"、"mistral" 等
 )
 
 resp = llm.create_chat_completion(

@@ -579,7 +579,7 @@ for row_idx, wacc_value in enumerate(wacc_range):
     for col_idx, term_growth_value in enumerate(term_growth_range):
         # Build formula that uses wacc_value and term_growth_value
         formula = f"=<DCF recalc using {wacc_value} and {term_growth_value}>"
-        ws.cell(row=start_row+row_idx, column=start_col+col_idx).value = formula
+        ws.cell(row=start_row + row_idx, column=start_col + col_idx).value = formula
 ```
 
 **敏感性表格在模型打开时必须立即可用，无需用户进行任何手动步骤。**

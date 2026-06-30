@@ -66,7 +66,10 @@ optional_env:
 ```python
 import os
 from gateway.platforms.base import (
-    BasePlatformAdapter, SendResult, MessageEvent, MessageType,
+    BasePlatformAdapter,
+    SendResult,
+    MessageEvent,
+    MessageType,
 )
 from gateway.config import Platform, PlatformConfig
 
@@ -139,8 +142,7 @@ def register(ctx):
         max_message_length=4000,
         # LLM guidance injected into system prompt
         platform_hint=(
-            "You are chatting via My Platform. "
-            "It supports markdown formatting."
+            "You are chatting via My Platform. It supports markdown formatting."
         ),
         # Display
         emoji="💬",
@@ -481,12 +483,17 @@ Create `plugins/platforms/newplat/adapter.py`:
 ```python
 from gateway.config import Platform, PlatformConfig
 from gateway.platforms.base import (
-    BasePlatformAdapter, MessageEvent, MessageType, SendResult,
+    BasePlatformAdapter,
+    MessageEvent,
+    MessageType,
+    SendResult,
 )
+
 
 def check_newplat_requirements() -> bool:
     """Return True if dependencies are available."""
     return SOME_SDK_AVAILABLE
+
 
 class NewPlatAdapter(BasePlatformAdapter):
     def __init__(self, config: PlatformConfig):
@@ -639,6 +646,7 @@ async def connect(self):
     self._poll_task = asyncio.create_task(self._poll_loop())
     self._mark_connected()
 
+
 async def _poll_loop(self):
     while self._running:
         messages = await self._fetch_updates()
@@ -657,6 +665,7 @@ async def connect(self):
     # ... start aiohttp server
     self._mark_connected()
 
+
 async def _handle_callback(self, request):
     event = self._build_event(await request.text())
     await self._message_queue.put(event)
@@ -672,11 +681,13 @@ If the adapter holds a persistent connection with a unique credential, add a sco
 ```python
 from gateway.status import acquire_scoped_lock, release_scoped_lock
 
+
 async def connect(self):
     if not acquire_scoped_lock("newplat", self._token):
         logger.error("Token already in use by another profile")
         return False
     # ... connect
+
 
 async def disconnect(self):
     release_scoped_lock("newplat", self._token)

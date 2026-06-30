@@ -148,6 +148,7 @@ pymupdf 原生支持这些操作——使用 `execute_code` 或内联 Python：
 ```python
 # 拆分：将第 1-5 页提取为新 PDF
 import pymupdf
+
 doc = pymupdf.open("report.pdf")
 new = pymupdf.open()
 for i in range(5):
@@ -158,6 +159,7 @@ new.save("pages_1-5.pdf")
 ```python
 # 合并多个 PDF
 import pymupdf
+
 result = pymupdf.open()
 for path in ["a.pdf", "b.pdf", "c.pdf"]:
     result.insert_pdf(pymupdf.open(path))
@@ -167,11 +169,12 @@ result.save("merged.pdf")
 ```python
 # 在所有页面中搜索文本
 import pymupdf
+
 doc = pymupdf.open("report.pdf")
 for i, page in enumerate(doc):
     results = page.search_for("revenue")
     if results:
-        print(f"Page {i+1}: {len(results)} match(es)")
+        print(f"Page {i + 1}: {len(results)} match(es)")
         print(page.get_text("text"))
 ```
 

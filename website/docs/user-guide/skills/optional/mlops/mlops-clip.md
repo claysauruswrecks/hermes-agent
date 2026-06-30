@@ -100,11 +100,11 @@ for label, prob in zip(labels, probs[0]):
 ```python
 # Models (sorted by size)
 models = [
-    "RN50",           # ResNet-50
-    "RN101",          # ResNet-101
-    "ViT-B/32",       # Vision Transformer (recommended)
-    "ViT-B/16",       # Better quality, slower
-    "ViT-L/14",       # Best quality, slowest
+    "RN50",  # ResNet-50
+    "RN101",  # ResNet-101
+    "ViT-B/32",  # Vision Transformer (recommended)
+    "ViT-B/16",  # Better quality, slower
+    "ViT-L/14",  # Best quality, slowest
 ]
 
 model, preprocess = clip.load("ViT-B/32")
@@ -171,7 +171,7 @@ categories = [
     "safe for work",
     "not safe for work",
     "violent content",
-    "graphic content"
+    "graphic content",
 ]
 
 text = clip.tokenize(categories).to(device)
@@ -226,15 +226,14 @@ for img_path, embedding in zip(image_paths, image_embeddings):
     collection.add(
         embeddings=[embedding.cpu().numpy().tolist()],
         metadatas=[{"path": img_path}],
-        ids=[img_path]
+        ids=[img_path],
     )
 
 # Query with text
 query = "a sunset"
 text_embedding = model.encode_text(clip.tokenize([query]))
 results = collection.query(
-    query_embeddings=[text_embedding.cpu().numpy().tolist()],
-    n_results=5
+    query_embeddings=[text_embedding.cpu().numpy().tolist()], n_results=5
 )
 ```
 

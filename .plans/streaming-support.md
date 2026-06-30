@@ -107,30 +107,30 @@ New method for Chat Completions API streaming:
 ```python
 def _run_streaming_chat_completion(self, api_kwargs: dict):
     """Stream a chat completion, emitting text tokens via stream_callback.
-    
+
     Returns a fake response object compatible with the non-streaming code path.
     Falls back to non-streaming on any error.
     """
     stream_kwargs = dict(api_kwargs)
     stream_kwargs["stream"] = True
     stream_kwargs["stream_options"] = {"include_usage": True}
-    
+
     accumulated_content = []
     accumulated_tool_calls = {}  # index -> {id, name, arguments}
     final_usage = None
-    
+
     try:
         stream = self.client.chat.completions.create(**stream_kwargs)
-        
+
         for chunk in stream:
             if not chunk.choices:
                 # Usage-only chunk (final)
                 if chunk.usage:
                     final_usage = chunk.usage
                 continue
-            
+
             delta = chunk.choices[0].delta
-            
+
             # Text content — emit via callback
             if delta.content:
                 accumulated_content.append(delta.content)
@@ -139,7 +139,7 @@ def _run_streaming_chat_completion(self, api_kwargs: dict):
                         self.stream_callback(delta.content)
                     except Exception:
                         pass
-            
+
             # Tool call deltas — accumulate silently
             if delta.tool_calls:
                 for tc_delta in delta.tool_calls:
@@ -147,37 +147,47 @@ def _run_streaming_chat_completion(self, api_kwargs: dict):
                     if idx not in accumulated_tool_calls:
                         accumulated_tool_calls[idx] = {
                             "id": tc_delta.id or "",
-                            "name": "", "arguments": ""
+                            "name": "",
+                            "arguments": "",
                         }
                     if tc_delta.function:
                         if tc_delta.function.name:
                             accumulated_tool_calls[idx]["name"] = tc_delta.function.name
                         if tc_delta.function.arguments:
-                            accumulated_tool_calls[idx]["arguments"] += tc_delta.function.arguments
-        
+                            accumulated_tool_calls[idx]["arguments"] += (
+                                tc_delta.function.arguments
+                            )
+
         # Build fake response compatible with existing code
         tool_calls = []
         for idx in sorted(accumulated_tool_calls):
             tc = accumulated_tool_calls[idx]
             if tc["name"]:
-                tool_calls.append(SimpleNamespace(
-                    id=tc["id"], type="function",
-                    function=SimpleNamespace(name=tc["name"], arguments=tc["arguments"]),
-                ))
-        
+                tool_calls.append(
+                    SimpleNamespace(
+                        id=tc["id"],
+                        type="function",
+                        function=SimpleNamespace(
+                            name=tc["name"], arguments=tc["arguments"]
+                        ),
+                    )
+                )
+
         return SimpleNamespace(
-            choices=[SimpleNamespace(
-                message=SimpleNamespace(
-                    content="".join(accumulated_content) or "",
-                    tool_calls=tool_calls or None,
-                    role="assistant",
-                ),
-                finish_reason="tool_calls" if tool_calls else "stop",
-            )],
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="".join(accumulated_content) or "",
+                        tool_calls=tool_calls or None,
+                        role="assistant",
+                    ),
+                    finish_reason="tool_calls" if tool_calls else "stop",
+                )
+            ],
             usage=final_usage,
             model=self.model,
         )
-    
+
     except Exception as e:
         logger.debug("Streaming failed, falling back to non-streaming: %s", e)
         return self.client.chat.completions.create(**api_kwargs)
@@ -192,8 +202,8 @@ def _run_codex_stream(self, api_kwargs: dict):
     with self.client.responses.stream(**api_kwargs) as stream:
         for event in stream:
             # Emit text deltas if streaming callback is set
-            if self.stream_callback and hasattr(event, 'type'):
-                if event.type == 'response.output_text.delta':
+            if self.stream_callback and hasattr(event, "type"):
+                if event.type == "response.output_text.delta":
                     try:
                         self.stream_callback(event.delta)
                     except Exception:
@@ -279,9 +289,10 @@ _stream_msg_id = [None]  # mutable ref for the async task
 
 if _streaming_enabled:
     import queue as _q
+
     _stream_q = _q.Queue()
     _stream_done = threading.Event()
-    
+
     def _on_token(delta):
         if delta is None:
             _stream_done.set()
@@ -301,13 +312,13 @@ async def stream_preview():
     adapter = self.adapters.get(source.platform)
     if not adapter:
         return
-    
+
     accumulated = []
     token_count = 0
     last_edit = 0.0
-    MIN_TOKENS = 20          # Don't show until enough context
-    EDIT_INTERVAL = 1.5      # Respect Telegram rate limits
-    
+    MIN_TOKENS = 20  # Don't show until enough context
+    EDIT_INTERVAL = 1.5  # Respect Telegram rate limits
+
     try:
         while not _stream_done.is_set():
             try:
@@ -316,7 +327,7 @@ async def stream_preview():
                 token_count += 1
             except queue.Empty:
                 continue
-            
+
             now = time.monotonic()
             if token_count >= MIN_TOKENS and (now - last_edit) >= EDIT_INTERVAL:
                 preview = "".join(accumulated) + " ▌"
@@ -335,11 +346,11 @@ async def stream_preview():
                         content=preview,
                     )
                 last_edit = now
-        
+
         # Drain remaining tokens
         while not _stream_q.empty():
             accumulated.append(_stream_q.get_nowait())
-        
+
         # Final edit — remove cursor, show complete text
         if _stream_msg_id[0] and accumulated:
             await adapter.edit_message(
@@ -347,7 +358,7 @@ async def stream_preview():
                 message_id=_stream_msg_id[0],
                 content="".join(accumulated),
             )
-    
+
     except asyncio.CancelledError:
         # Clean up on cancel
         if _stream_msg_id[0] and accumulated:
@@ -494,13 +505,14 @@ token-by-token SSE when the agent supports it.
 ```python
 if stream:
     _stream_q = queue.Queue()
-    
+
     def _api_stream_callback(delta):
         _stream_q.put(delta)  # None = done
-    
+
     # Pass callback to _run_agent
     result, usage = await self._run_agent(
-        ..., stream_callback=_api_stream_callback,
+        ...,
+        stream_callback=_api_stream_callback,
     )
 ```
 

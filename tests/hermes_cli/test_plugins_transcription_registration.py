@@ -60,6 +60,7 @@ class TestRegisterTranscriptionProvider:
         from hermes_cli.plugins import PluginManager
 
         from agent import transcription_registry
+
         transcription_registry._reset_for_tests()
 
         hermes_home = Path(os.environ["HERMES_HOME"])
@@ -92,6 +93,7 @@ class TestRegisterTranscriptionProvider:
         from hermes_cli.plugins import PluginManager
 
         from agent import transcription_registry
+
         transcription_registry._reset_for_tests()
 
         hermes_home = Path(os.environ["HERMES_HOME"])
@@ -117,6 +119,7 @@ class TestRegisterTranscriptionProvider:
         from hermes_cli.plugins import PluginManager
 
         from agent import transcription_registry
+
         transcription_registry._reset_for_tests()
 
         hermes_home = Path(os.environ["HERMES_HOME"])

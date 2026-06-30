@@ -195,14 +195,11 @@ llm = LLM(
     model="meta-llama/Llama-3-8B-Instruct",
     tensor_parallel_size=2,  # Use 2 GPUs
     gpu_memory_utilization=0.9,
-    max_model_len=4096
+    max_model_len=4096,
 )
 
 sampling = SamplingParams(
-    temperature=0.7,
-    top_p=0.95,
-    max_tokens=512,
-    stop=["</s>", "\n\n"]
+    temperature=0.7, top_p=0.95, max_tokens=512, stop=["</s>", "\n\n"]
 )
 ```
 
@@ -229,11 +226,12 @@ for output in outputs:
     results.append({
         "prompt": prompt,
         "generated": generated,
-        "tokens": len(output.outputs[0].token_ids)
+        "tokens": len(output.outputs[0].token_ids),
     })
 
 # Save to file
 import json
+
 with open("results.jsonl", "w") as f:
     for result in results:
         f.write(json.dumps(result) + "\n")

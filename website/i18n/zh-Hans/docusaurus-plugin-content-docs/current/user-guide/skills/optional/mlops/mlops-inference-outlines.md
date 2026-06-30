@@ -80,10 +80,12 @@ print(sentiment)  # "positive"（保证为其中之一）
 from pydantic import BaseModel
 import outlines
 
+
 class User(BaseModel):
     name: str
     age: int
     email: str
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 
@@ -92,8 +94,8 @@ prompt = "Extract user: John Doe, 30 years old, john@example.com"
 generator = outlines.generate.json(model, User)
 user = generator(prompt)
 
-print(user.name)   # "John Doe"
-print(user.age)    # 30
+print(user.name)  # "John Doe"
+print(user.age)  # 30
 print(user.email)  # "john@example.com"
 ```
 
@@ -117,10 +119,12 @@ Outlines 使用有限状态机（FSM）在 logit 层面约束 token 生成。
 ```python
 import outlines
 
+
 # Pydantic 模型 -> JSON schema -> CFG -> FSM
 class Person(BaseModel):
     name: str
     age: int
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 
@@ -142,10 +146,7 @@ Outlines 为不同输出类型提供专用生成器。
 
 ```python
 # 多项选择
-generator = outlines.generate.choice(
-    model,
-    ["positive", "negative", "neutral"]
-)
+generator = outlines.generate.choice(model, ["positive", "negative", "neutral"])
 
 sentiment = generator("Review: This is great!")
 # 结果：三个选项之一
@@ -156,10 +157,12 @@ sentiment = generator("Review: This is great!")
 ```python
 from pydantic import BaseModel
 
+
 class Product(BaseModel):
     name: str
     price: float
     in_stock: bool
+
 
 # 生成符合 schema 的有效 JSON
 generator = outlines.generate.json(model, Product)
@@ -175,7 +178,7 @@ print(type(product))  # <class '__main__.Product'>
 # 生成匹配 regex 的文本
 generator = outlines.generate.regex(
     model,
-    r"[0-9]{3}-[0-9]{3}-[0-9]{4}"  # 电话号码模式
+    r"[0-9]{3}-[0-9]{3}-[0-9]{4}",  # 电话号码模式
 )
 
 phone = generator("Generate phone number:")
@@ -205,7 +208,7 @@ import outlines
 # 从 Hugging Face 加载
 model = outlines.models.transformers(
     "microsoft/Phi-3-mini-4k-instruct",
-    device="cuda"  # 或 "cpu"
+    device="cuda",  # 或 "cpu"
 )
 
 # 与任意生成器配合使用
@@ -217,8 +220,7 @@ generator = outlines.generate.json(model, YourModel)
 ```python
 # 加载 GGUF 模型
 model = outlines.models.llamacpp(
-    "./models/llama-3.1-8b-instruct.Q4_K_M.gguf",
-    n_gpu_layers=35
+    "./models/llama-3.1-8b-instruct.Q4_K_M.gguf", n_gpu_layers=35
 )
 
 generator = outlines.generate.json(model, YourModel)
@@ -230,7 +232,7 @@ generator = outlines.generate.json(model, YourModel)
 # 用于生产部署
 model = outlines.models.vllm(
     "meta-llama/Llama-3.1-8B-Instruct",
-    tensor_parallel_size=2  # 多 GPU
+    tensor_parallel_size=2,  # 多 GPU
 )
 
 generator = outlines.generate.json(model, YourModel)
@@ -240,10 +242,7 @@ generator = outlines.generate.json(model, YourModel)
 
 ```python
 # 基础 OpenAI 支持
-model = outlines.models.openai(
-    "gpt-4o-mini",
-    api_key="your-api-key"
-)
+model = outlines.models.openai("gpt-4o-mini", api_key="your-api-key")
 
 # 注意：API 模型部分功能受限
 generator = outlines.generate.json(model, YourModel)
@@ -258,11 +257,13 @@ Outlines 对 Pydantic 提供一流支持，可自动进行 schema 转换。
 ```python
 from pydantic import BaseModel, Field
 
+
 class Article(BaseModel):
     title: str = Field(description="Article title")
     author: str = Field(description="Author name")
     word_count: int = Field(description="Number of words", gt=0)
     tags: list[str] = Field(description="List of tags")
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, Article)
@@ -280,10 +281,12 @@ class Address(BaseModel):
     city: str
     country: str
 
+
 class Person(BaseModel):
     name: str
     age: int
     address: Address  # 嵌套模型
+
 
 generator = outlines.generate.json(model, Person)
 person = generator("Generate person in New York")
@@ -297,15 +300,18 @@ print(person.address.city)  # "New York"
 from enum import Enum
 from typing import Literal
 
+
 class Status(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
 
+
 class Application(BaseModel):
     applicant: str
     status: Status  # 必须为枚举值之一
     priority: Literal["low", "medium", "high"]  # 必须为 literal 之一
+
 
 generator = outlines.generate.json(model, Application)
 app = generator("Generate application")
@@ -321,11 +327,13 @@ print(app.status)  # Status.PENDING（或 APPROVED/REJECTED）
 from pydantic import BaseModel
 import outlines
 
+
 class CompanyInfo(BaseModel):
     name: str
     founded_year: int
     industry: str
     employees: int
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, CompanyInfo)
@@ -361,10 +369,12 @@ categories = ["technology", "business", "sports", "entertainment"]
 category_gen = outlines.generate.choice(model, categories)
 category = category_gen("Article: Apple announces new iPhone...")
 
+
 # 带置信度
 class Classification(BaseModel):
     label: Literal["positive", "negative", "neutral"]
     confidence: float
+
 
 classifier = outlines.generate.json(model, Classification)
 result = classifier("Review: This product is okay, nothing special")
@@ -380,6 +390,7 @@ class UserProfile(BaseModel):
     phone: str
     country: str
     interests: list[str]
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, UserProfile)
@@ -406,8 +417,10 @@ class Entity(BaseModel):
     name: str
     type: Literal["PERSON", "ORGANIZATION", "LOCATION"]
 
+
 class DocumentEntities(BaseModel):
     entities: list[Entity]
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, DocumentEntities)
@@ -428,6 +441,7 @@ class PythonFunction(BaseModel):
     parameters: list[str]
     docstring: str
     body: str
+
 
 model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, PythonFunction)
@@ -455,15 +469,13 @@ def batch_extract(texts: list[str], schema: type[BaseModel]):
 
     return results
 
+
 class Person(BaseModel):
     name: str
     age: int
 
-texts = [
-    "John is 30 years old",
-    "Alice is 25 years old",
-    "Bob is 40 years old"
-]
+
+texts = ["John is 30 years old", "Alice is 25 years old", "Bob is 40 years old"]
 
 people = batch_extract(texts, Person)
 for person in people:
@@ -484,7 +496,7 @@ model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 model = outlines.models.transformers(
     "microsoft/Phi-3-mini-4k-instruct",
     device="cuda",
-    model_kwargs={"torch_dtype": "float16"}
+    model_kwargs={"torch_dtype": "float16"},
 )
 
 # 常用模型
@@ -499,15 +511,15 @@ model = outlines.models.transformers("Qwen/Qwen2.5-7B-Instruct")
 # 加载 GGUF 模型
 model = outlines.models.llamacpp(
     "./models/llama-3.1-8b.Q4_K_M.gguf",
-    n_ctx=4096,         # 上下文窗口
-    n_gpu_layers=35,    # GPU 层数
-    n_threads=8         # CPU 线程数
+    n_ctx=4096,  # 上下文窗口
+    n_gpu_layers=35,  # GPU 层数
+    n_threads=8,  # CPU 线程数
 )
 
 # 完全 GPU 卸载
 model = outlines.models.llamacpp(
     "./models/model.gguf",
-    n_gpu_layers=-1  # 所有层在 GPU 上
+    n_gpu_layers=-1,  # 所有层在 GPU 上
 )
 ```
 
@@ -520,13 +532,13 @@ model = outlines.models.vllm("meta-llama/Llama-3.1-8B-Instruct")
 # 多 GPU
 model = outlines.models.vllm(
     "meta-llama/Llama-3.1-70B-Instruct",
-    tensor_parallel_size=4  # 4 块 GPU
+    tensor_parallel_size=4,  # 4 块 GPU
 )
 
 # 带量化
 model = outlines.models.vllm(
     "meta-llama/Llama-3.1-8B-Instruct",
-    quantization="awq"  # 或 "gptq"
+    quantization="awq",  # 或 "gptq"
 )
 ```
 
@@ -542,6 +554,7 @@ class Product(BaseModel):
     quantity: int  # 非 str
     in_stock: bool  # 非 str
 
+
 # ❌ 差：全部用字符串
 class Product(BaseModel):
     name: str
@@ -554,11 +567,13 @@ class Product(BaseModel):
 ```python
 from pydantic import Field
 
+
 # ✅ 好：带约束
 class User(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     age: int = Field(ge=0, le=120)
     email: str = Field(pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$")
+
 
 # ❌ 差：无约束
 class User(BaseModel):
@@ -576,9 +591,11 @@ class Priority(str, Enum):
     MEDIUM = "medium"
     HIGH = "high"
 
+
 class Task(BaseModel):
     title: str
     priority: Priority
+
 
 # ❌ 差：自由格式字符串
 class Task(BaseModel):
@@ -605,12 +622,14 @@ prompt = "iPhone 15 Pro costs $999 and is currently in stock."
 ```python
 from typing import Optional
 
+
 # ✅ 好：对不完整数据使用可选字段
 class Article(BaseModel):
     title: str  # 必填
     author: Optional[str] = None  # 可选
     date: Optional[str] = None  # 可选
     tags: list[str] = []  # 默认空列表
+
 
 # 即使 author/date 缺失也能成功
 ```

@@ -41,7 +41,9 @@ def _make_adapter(api_key: str = "") -> APIServerAdapter:
 
 def _create_runs_app(adapter: APIServerAdapter) -> web.Application:
     """Create an aiohttp app with /v1/runs routes registered."""
-    mws = [mw for mw in (cors_middleware, security_headers_middleware) if mw is not None]
+    mws = [
+        mw for mw in (cors_middleware, security_headers_middleware) if mw is not None
+    ]
     app = web.Application(middlewares=mws)
     app["api_server_adapter"] = adapter
     app.router.add_post("/v1/runs", adapter._handle_runs)
@@ -252,7 +254,10 @@ class TestRunStatus:
                     await asyncio.sleep(0.05)
 
                 mock_agent.run_conversation.assert_called_once()
-                assert mock_agent.run_conversation.call_args.kwargs["task_id"] == "space-session"
+                assert (
+                    mock_agent.run_conversation.call_args.kwargs["task_id"]
+                    == "space-session"
+                )
                 assert status["session_id"] == "space-session"
 
     @pytest.mark.asyncio
@@ -304,8 +309,6 @@ class TestRunEvents:
                 assert "run.completed" in body
                 assert "Hello!" in body
 
-
-
     @pytest.mark.asyncio
     async def test_approval_response_without_pending_returns_409(self, adapter):
         app = _create_runs_app(adapter)
@@ -342,7 +345,9 @@ class TestRunEvents:
         adapter._run_approval_sessions[run_id] = "session-123"
 
         async with TestClient(TestServer(app)) as cli:
-            with patch("tools.approval.resolve_gateway_approval", return_value=1) as mock_resolve:
+            with patch(
+                "tools.approval.resolve_gateway_approval", return_value=1
+            ) as mock_resolve:
                 approval_resp = await cli.post(
                     f"/v1/runs/{run_id}/approval",
                     json={"choice": "once", "all": "false"},

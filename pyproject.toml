@@ -135,6 +135,13 @@ dependencies = [
   # Hence the ``sys_platform == 'win32'`` marker: the dep (and its portalocker
   # / pywin32 tree) ships only where it's actually used.
   "concurrent-log-handler==0.9.29; sys_platform == 'win32'",
+  # Sentence boundary detection for TTS streaming playback. ``pysbd`` is a
+  # lightweight, pure-Python NLP sentence splitter that handles abbreviations,
+  # URLs, and titles naturally — preventing large pauses between TTS chunks by
+  # buffering text into semantically valid sentences before sending to the TTS
+  # engine. Pre-1.0 package: pinned with `<0.(current_minor + 2)` per policy.
+  "pysbd>=0.3.4,<0.5",
+  "ruff>=0.15.10",
 ]
 
 [project.optional-dependencies]
@@ -174,6 +181,7 @@ voice = [
   "sounddevice==0.5.5",
   "numpy==2.4.3",
 ]
+tts-sentence-splitting = ["pysbd>=0.3.4,<0.4"]  # Optional NLP sentence boundary detection for TTS phrasing
 pty = [
   # Kept as a no-op back-compat alias — `ptyprocess` and `pywinpty` are now
   # in the main `dependencies` list (with the same platform markers), so

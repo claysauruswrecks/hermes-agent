@@ -61,13 +61,13 @@ Hermes 将此称为**无 agent 模式**。这是去掉 LLM 的 cron 系统。
 # 1. 写入检查脚本
 write_file(
     path="~/.hermes/scripts/memory-watchdog.sh",
-    content='''#!/usr/bin/env bash
+    content="""#!/usr/bin/env bash
 ram_pct=$(free | awk '/^Mem:/ {printf "%d", $3 * 100 / $2}')
 if [ "$ram_pct" -ge 85 ]; then
   echo "RAM ${ram_pct}% on $(hostname)"
 fi
 # Empty stdout = silent tick; no message sent.
-''',
+""",
 )
 
 # 2. 调度任务 — no_agent=True 在每次触发时跳过 LLM

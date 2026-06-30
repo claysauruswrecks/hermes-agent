@@ -78,8 +78,8 @@ ntfy 没有原生的已认证用户身份。已发布消息中的 `title` 字段
 cronjob(
     action="create",
     schedule="every 1h",
-    deliver="ntfy",          # uses NTFY_HOME_CHANNEL
-    prompt="Check for alerts and summarise."
+    deliver="ntfy",  # uses NTFY_HOME_CHANNEL
+    prompt="Check for alerts and summarise.",
 )
 ```
 

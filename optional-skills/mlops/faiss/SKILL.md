@@ -57,15 +57,15 @@ import numpy as np
 # Create sample data (1000 vectors, 128 dimensions)
 d = 128
 nb = 1000
-vectors = np.random.random((nb, d)).astype('float32')
+vectors = np.random.random((nb, d)).astype("float32")
 
 # Create index
 index = faiss.IndexFlatL2(d)  # L2 distance
-index.add(vectors)             # Add vectors
+index.add(vectors)  # Add vectors
 
 # Search
 k = 5  # Find 5 nearest neighbors
-query = np.random.random((1, d)).astype('float32')
+query = np.random.random((1, d)).astype("float32")
 distances, indices = index.search(query, k)
 
 print(f"Nearest neighbors: {indices}")
@@ -125,7 +125,7 @@ distances, indices = index.search(query, k)
 
 ```python
 # PQ reduces memory by 16-32×
-m = 8   # Number of subquantizers
+m = 8  # Number of subquantizers
 nbits = 8
 index = faiss.IndexPQ(d, m, nbits)
 
@@ -175,9 +175,7 @@ vectorstore.save_local("faiss_index")
 
 # Load
 vectorstore = FAISS.load_local(
-    "faiss_index",
-    OpenAIEmbeddings(),
-    allow_dangerous_deserialization=True
+    "faiss_index", OpenAIEmbeddings(), allow_dangerous_deserialization=True
 )
 
 # Search

@@ -34,7 +34,6 @@ from prompt_toolkit.filters import Condition
 
 
 class MyCLI(HermesCLI):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._panel_visible = False
@@ -98,6 +97,7 @@ def _get_extra_tui_widgets(self) -> list:
 from prompt_toolkit.layout import ConditionalContainer, Window, FormattedTextControl
 from prompt_toolkit.filters import Condition
 
+
 def _get_extra_tui_widgets(self):
     return [
         ConditionalContainer(
@@ -151,22 +151,22 @@ def _build_tui_layout_children(self, *, sudo_widget, secret_widget,
 
 ```python
 [
-    Window(height=0),       # anchor
-    sudo_widget,            # sudo password prompt (conditional)
-    secret_widget,          # secret input prompt (conditional)
-    approval_widget,        # dangerous command approval (conditional)
-    clarify_widget,         # clarify question UI (conditional)
-    model_picker_widget,    # model picker overlay (conditional)
-    spinner_widget,         # thinking spinner (conditional)
-    spacer,                 # fills remaining vertical space
+    Window(height=0),  # anchor
+    sudo_widget,  # sudo password prompt (conditional)
+    secret_widget,  # secret input prompt (conditional)
+    approval_widget,  # dangerous command approval (conditional)
+    clarify_widget,  # clarify question UI (conditional)
+    model_picker_widget,  # model picker overlay (conditional)
+    spinner_widget,  # thinking spinner (conditional)
+    spacer,  # fills remaining vertical space
     *self._get_extra_tui_widgets(),  # YOUR WIDGETS GO HERE
-    status_bar,             # model/token/context status line
-    input_rule_top,         # ─── border above input
-    image_bar,              # attached images indicator
-    input_area,             # user text input
-    input_rule_bot,         # ─── border below input
-    voice_status_bar,       # voice mode status (conditional)
-    completions_menu,       # autocomplete dropdown
+    status_bar,  # model/token/context status line
+    input_rule_top,  # ─── border above input
+    image_bar,  # attached images indicator
+    input_area,  # user text input
+    input_rule_bot,  # ─── border below input
+    voice_status_bar,  # voice mode status (conditional)
+    completions_menu,  # autocomplete dropdown
 ]
 ```
 

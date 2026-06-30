@@ -30,9 +30,9 @@ response = agent.chat("Fix the bug in main.py")
 # 完整接口——返回包含消息、元数据、用量统计的 dict
 result = agent.run_conversation(
     user_message="Fix the bug in main.py",
-    system_message=None,           # 省略时自动构建
-    conversation_history=None,      # 省略时自动从 session 加载
-    task_id="task_abc123"
+    system_message=None,  # 省略时自动构建
+    conversation_history=None,  # 省略时自动从 session 加载
+    task_id="task_abc123",
 )
 ```
 

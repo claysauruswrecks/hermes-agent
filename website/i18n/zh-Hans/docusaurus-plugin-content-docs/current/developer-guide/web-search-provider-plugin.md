@@ -169,10 +169,7 @@ requires_env:
 {
     "success": True,
     "data": {
-        "web": [
-            {"title": str, "url": str, "description": str, "position": int},
-            ...
-        ],
+        "web": [{"title": str, "url": str, "description": str, "position": int}, ...],
     },
 }
 ```
@@ -188,10 +185,10 @@ requires_env:
             "title": str,
             "content": str,
             "raw_content": str,
-            "metadata": dict,    # optional
-            "error": str,        # optional, only on per-URL failure
+            "metadata": dict,  # optional
+            "error": str,  # optional, only on per-URL failure
         },
-        ...
+        ...,
     ],
 }
 ```

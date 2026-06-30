@@ -63,7 +63,7 @@ description: "调试 REST/GraphQL API：状态码、认证、Schema、复现"
 
 ```python
 # 详细的请求/响应交互
-terminal('curl -v https://api.example.com/users/1')
+terminal("curl -v https://api.example.com/users/1")
 
 # 带 JSON 的 POST
 terminal("""curl -X POST https://api.example.com/users \\
@@ -72,10 +72,10 @@ terminal("""curl -X POST https://api.example.com/users \\
   -d '{"name":"test","email":"test@example.com"}'""")
 
 # 仅查看响应头
-terminal('curl -sI https://api.example.com/health')
+terminal("curl -sI https://api.example.com/health")
 
 # 格式化输出 JSON
-terminal('curl -s https://api.example.com/users | python3 -m json.tool')
+terminal("curl -s https://api.example.com/users | python3 -m json.tool")
 ```
 
 ### 通过 terminal 调试 GraphQL
@@ -90,7 +90,7 @@ terminal("""curl -X POST https://api.example.com/graphql \\
 **GraphQL 注意事项：** 即使查询失败，服务端通常也会返回 HTTP 200。无论状态码如何，始终检查 `errors` 字段：
 
 ```python
-execute_code('''
+execute_code("""
 import os, requests
 resp = requests.post(
     "https://api.example.com/graphql",
@@ -103,13 +103,13 @@ if data.get("errors"):
     for err in data["errors"]:
         print(f"GraphQL error: {err['message']} (path: {err.get('path')})")
 print(data.get("data"))
-''')
+""")
 ```
 
 ### 通过 execute_code 使用 Python（requests）
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 resp = requests.get(
     "https://api.example.com/users/1",
@@ -118,7 +118,7 @@ resp = requests.get(
 )
 print(resp.status_code, dict(resp.headers))
 print(resp.text[:500])
-''')
+""")
 ```
 
 ## 分层调试流程
@@ -126,8 +126,8 @@ print(resp.text[:500])
 ### 第 1 步 — 连通性
 
 ```python
-terminal('nslookup api.example.com')
-terminal('curl -v --connect-timeout 5 https://api.example.com/health')
+terminal("nslookup api.example.com")
+terminal("curl -v --connect-timeout 5 https://api.example.com/health")
 ```
 
 常见故障：DNS 无法解析、防火墙、需要 VPN、缺少代理。
@@ -137,14 +137,14 @@ terminal('curl -v --connect-timeout 5 https://api.example.com/health')
 区分*无法到达*与*到达但响应慢*：
 
 ```python
-terminal('''curl -w "dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n" \\
-  -o /dev/null -s https://api.example.com/endpoint''')
+terminal("""curl -w "dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n" \\
+  -o /dev/null -s https://api.example.com/endpoint""")
 ```
 
 在 Python 中，始终传入元组超时 —— `requests` 没有默认值，会永久挂起：
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 from requests.exceptions import ConnectTimeout, ReadTimeout
 try:
@@ -153,7 +153,7 @@ except ConnectTimeout:
     print("Cannot reach host — DNS, firewall, VPN")
 except ReadTimeout:
     print("Connected but server is slow")
-''')
+""")
 ```
 
 诊断：`time_connect` 高说明是网络/防火墙问题；`time_connect` 低但 `time_starttransfer` 高说明是服务端响应慢。
@@ -170,16 +170,18 @@ terminal('curl -vI https://api.example.com 2>&1 | grep -E "SSL|subject|expire|is
 
 ```python
 # 检查 token 有效性
-terminal('curl -s -o /dev/null -w "%{http_code}\\n" -H "Authorization: Bearer $TOKEN" https://api.example.com/me')
+terminal(
+    'curl -s -o /dev/null -w "%{http_code}\\n" -H "Authorization: Bearer $TOKEN" https://api.example.com/me'
+)
 
 # 解码 JWT exp 声明 — 正确处理 base64url 填充
-execute_code('''
+execute_code("""
 import json, base64, os
 tok = os.environ["TOKEN"]
 payload = tok.split(".")[1]
 payload += "=" * (-len(payload) % 4)
 print(json.dumps(json.loads(base64.urlsafe_b64decode(payload)), indent=2))
-''')
+""")
 ```
 
 检查清单：
@@ -219,7 +221,7 @@ requests.post(url, files={"file": open("doc.pdf", "rb")})
 调用 `.json()` 前始终检查 content-type：
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 resp = requests.post(url, json=payload, timeout=10)
 print(f"status={resp.status_code}")
@@ -229,7 +231,7 @@ if "application/json" in ct:
     print(resp.json())
 else:
     print(f"unexpected content-type {ct!r}, body={resp.text[:500]!r}")
-''')
+""")
 ```
 
 常见故障：期望 JSON 却收到 HTML 错误页、响应体为空、字符集错误。
@@ -284,7 +286,7 @@ else:
 检查 `Retry-After` 和 `X-RateLimit-*` 响应头。指数退避：
 
 ```python
-execute_code('''
+execute_code("""
 import time, requests
 
 def with_backoff(method, url, **kwargs):
@@ -295,7 +297,7 @@ def with_backoff(method, url, **kwargs):
         wait = int(resp.headers.get("Retry-After", 2 ** attempt))
         time.sleep(wait)
     return resp
-''')
+""")
 ```
 
 ### 5xx — 服务端问题，通常不是你的错
@@ -320,7 +322,7 @@ def with_backoff(method, url, **kwargs):
 在进入生产前捕获 schema 漂移：
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 
 def validate_user(data: dict) -> list[str]:
@@ -337,7 +339,7 @@ resp = requests.get(f"{BASE}/users/1", headers=HEADERS, timeout=10)
 issues = validate_user(resp.json())
 if issues:
     print(f"contract violations: {issues}")
-''')
+""")
 ```
 
 在 API 升级后、接入新第三方时，或在 CI 冒烟测试中运行。
@@ -347,7 +349,7 @@ if issues:
 始终记录服务商的请求 ID —— 这是联系厂商支持的最快途径：
 
 ```python
-execute_code('''
+execute_code("""
 import requests
 resp = requests.post(url, json=payload, headers=headers, timeout=10)
 request_id = (
@@ -357,7 +359,7 @@ request_id = (
 )
 if resp.status_code >= 400:
     print(f"failed status={resp.status_code} req_id={request_id} ts={resp.headers.get('Date')}")
-''')
+""")
 ```
 
 **厂商 bug 报告模板：**
@@ -380,8 +382,9 @@ Repro:       curl -X POST … (auth: <REDACTED>)
 import os, requests, pytest
 
 BASE_URL = os.environ.get("API_BASE_URL", "https://api.example.com")
-TOKEN    = os.environ.get("API_TOKEN", "")
-HEADERS  = {"Authorization": f"Bearer {TOKEN}"}
+TOKEN = os.environ.get("API_TOKEN", "")
+HEADERS = {"Authorization": f"Bearer {TOKEN}"}
+
 
 class TestAPISmoke:
     def test_health(self):
@@ -422,7 +425,9 @@ class TestAPISmoke:
 ```python
 def redact_auth(headers: dict) -> dict:
     sensitive = {"authorization", "x-api-key", "cookie", "set-cookie"}
-    return {k: ("<REDACTED>" if k.lower() in sensitive else v) for k, v in headers.items()}
+    return {
+        k: ("<REDACTED>" if k.lower() in sensitive else v) for k, v in headers.items()
+    }
 ```
 
 ### 泄露检查清单
@@ -439,8 +444,10 @@ def redact_auth(headers: dict) -> dict:
 ### terminal — 用于 curl、dig、openssl
 
 ```python
-terminal('curl -sI https://api.example.com')
-terminal('openssl s_client -connect api.example.com:443 -servername api.example.com </dev/null 2>/dev/null | openssl x509 -noout -dates')
+terminal("curl -sI https://api.example.com")
+terminal(
+    "openssl s_client -connect api.example.com:443 -servername api.example.com </dev/null 2>/dev/null | openssl x509 -noout -dates"
+)
 ```
 
 ### execute_code — 用于多步骤 Python 流程
@@ -448,7 +455,7 @@ terminal('openssl s_client -connect api.example.com:443 -servername api.example.
 当调试跨越认证 → 请求 → 分页 → 验证多个环节时，使用 `execute_code`。变量在脚本内持久存在，结果打印到 stdout，不会在上下文中产生 token 污染：
 
 ```python
-execute_code('''
+execute_code("""
 import os, requests
 
 token = os.environ["API_TOKEN"]
@@ -470,7 +477,7 @@ while True:
     if not cursor:
         break
 print(f"users={len(all_users)}")
-''')
+""")
 ```
 
 ### web_extract — 用于查阅厂商 API 文档

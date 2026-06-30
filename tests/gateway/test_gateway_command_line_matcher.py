@@ -25,7 +25,7 @@ ACCEPT = [
     "python -m hermes_cli/main.py gateway run",
     "python gateway/run.py",
     "hermes-gateway.exe",
-    "hermes gateway",          # bare `hermes gateway` defaults to run
+    "hermes gateway",  # bare `hermes gateway` defaults to run
     "hermes gateway run",
     # profile selector AFTER the `gateway` token (argv is profile-position
     # agnostic — _apply_profile_override strips --profile/-p anywhere)
@@ -42,11 +42,11 @@ ACCEPT = [
 ]
 
 REJECT = [
-    "python -m tui_gateway",                              # unrelated module
-    "python -m hermes_cli.main gateway status",           # other subcommand
+    "python -m tui_gateway",  # unrelated module
+    "python -m hermes_cli.main gateway status",  # other subcommand
     "python -m hermes_cli.main gateway restart",
     "python -m hermes_cli.main gateway stop",
-    "python -m hermes_cli.main --profile x dashboard",    # non-gateway subcommand
+    "python -m hermes_cli.main --profile x dashboard",  # non-gateway subcommand
     "some random python -m mygateway thing",
     "",
     None,

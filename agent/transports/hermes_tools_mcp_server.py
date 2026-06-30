@@ -146,9 +146,7 @@ def _build_server() -> Any:
     for name in EXPOSED_TOOLS:
         spec = all_defs.get(name)
         if spec is None:
-            logger.debug(
-                "skipping %s — not registered in this Hermes process", name
-            )
+            logger.debug("skipping %s — not registered in this Hermes process", name)
             continue
 
         description = spec.get("description") or f"Hermes {name} tool"
@@ -166,6 +164,7 @@ def _build_server() -> Any:
                 except Exception as exc:
                     logger.exception("tool %s raised", tool_name)
                     return json.dumps({"error": str(exc), "tool": tool_name})
+
             _dispatch.__name__ = tool_name
             _dispatch.__doc__ = description
             return _dispatch

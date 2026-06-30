@@ -62,13 +62,13 @@ import torchaudio
 from audiocraft.models import MusicGen
 
 # Load model
-model = MusicGen.get_pretrained('facebook/musicgen-small')
+model = MusicGen.get_pretrained("facebook/musicgen-small")
 
 # Set generation parameters
 model.set_generation_params(
     duration=8,  # seconds
     top_k=250,
-    temperature=1.0
+    temperature=1.0,
 )
 
 # Generate from text
@@ -92,21 +92,18 @@ model.to("cuda")
 
 # Generate music
 inputs = processor(
-    text=["80s pop track with bassy drums and synth"],
-    padding=True,
-    return_tensors="pt"
+    text=["80s pop track with bassy drums and synth"], padding=True, return_tensors="pt"
 ).to("cuda")
 
 audio_values = model.generate(
-    **inputs,
-    do_sample=True,
-    guidance_scale=3,
-    max_new_tokens=256
+    **inputs, do_sample=True, guidance_scale=3, max_new_tokens=256
 )
 
 # Save
 sampling_rate = model.config.audio_encoder.sampling_rate
-scipy.io.wavfile.write("output.wav", rate=sampling_rate, data=audio_values[0, 0].cpu().numpy())
+scipy.io.wavfile.write(
+    "output.wav", rate=sampling_rate, data=audio_values[0, 0].cpu().numpy()
+)
 ```
 
 ### Text-to-sound with AudioGen
@@ -115,7 +112,7 @@ scipy.io.wavfile.write("output.wav", rate=sampling_rate, data=audio_values[0, 0]
 from audiocraft.models import AudioGen
 
 # Load AudioGen
-model = AudioGen.get_pretrained('facebook/audiogen-medium')
+model = AudioGen.get_pretrained("facebook/audiogen-medium")
 
 model.set_generation_params(duration=5)
 
@@ -181,22 +178,22 @@ AudioCraft Architecture:
 from audiocraft.models import MusicGen
 import torchaudio
 
-model = MusicGen.get_pretrained('facebook/musicgen-medium')
+model = MusicGen.get_pretrained("facebook/musicgen-medium")
 
 # Configure generation
 model.set_generation_params(
-    duration=30,          # Up to 30 seconds
-    top_k=250,            # Sampling diversity
-    top_p=0.0,            # 0 = use top_k only
-    temperature=1.0,      # Creativity (higher = more varied)
-    cfg_coef=3.0          # Text adherence (higher = stricter)
+    duration=30,  # Up to 30 seconds
+    top_k=250,  # Sampling diversity
+    top_p=0.0,  # 0 = use top_k only
+    temperature=1.0,  # Creativity (higher = more varied)
+    cfg_coef=3.0,  # Text adherence (higher = stricter)
 )
 
 # Generate multiple samples
 descriptions = [
     "epic orchestral soundtrack with strings and brass",
     "chill lo-fi hip hop beat with jazzy piano",
-    "energetic rock song with electric guitar"
+    "energetic rock song with electric guitar",
 ]
 
 # Generate (returns [batch, channels, samples])
@@ -214,7 +211,7 @@ from audiocraft.models import MusicGen
 import torchaudio
 
 # Load melody model
-model = MusicGen.get_pretrained('facebook/musicgen-melody')
+model = MusicGen.get_pretrained("facebook/musicgen-melody")
 model.set_generation_params(duration=30)
 
 # Load melody audio
@@ -233,7 +230,7 @@ torchaudio.save("melody_conditioned.wav", wav[0].cpu(), sample_rate=32000)
 from audiocraft.models import MusicGen
 
 # Load stereo model
-model = MusicGen.get_pretrained('facebook/musicgen-stereo-medium')
+model = MusicGen.get_pretrained("facebook/musicgen-stereo-medium")
 model.set_generation_params(duration=15)
 
 descriptions = ["ambient electronic music with wide stereo panning"]
@@ -254,6 +251,7 @@ model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-medi
 
 # Load audio to continue
 import torchaudio
+
 audio, sr = torchaudio.load("intro.wav")
 
 # Process with text and audio
@@ -262,11 +260,13 @@ inputs = processor(
     sampling_rate=sr,
     text=["continue with a epic chorus"],
     padding=True,
-    return_tensors="pt"
+    return_tensors="pt",
 )
 
 # Generate continuation
-audio_values = model.generate(**inputs, do_sample=True, guidance_scale=3, max_new_tokens=512)
+audio_values = model.generate(
+    **inputs, do_sample=True, guidance_scale=3, max_new_tokens=512
+)
 ```
 
 ## MusicGen-Style usage
@@ -277,19 +277,19 @@ audio_values = model.generate(**inputs, do_sample=True, guidance_scale=3, max_ne
 from audiocraft.models import MusicGen
 
 # Load style model
-model = MusicGen.get_pretrained('facebook/musicgen-style')
+model = MusicGen.get_pretrained("facebook/musicgen-style")
 
 # Configure generation with style
 model.set_generation_params(
     duration=30,
     cfg_coef=3.0,
-    cfg_coef_beta=5.0  # Style influence
+    cfg_coef_beta=5.0,  # Style influence
 )
 
 # Configure style conditioner
 model.set_style_conditioner_params(
-    eval_q=3,          # RVQ quantizers (1-6)
-    excerpt_length=3.0  # Style excerpt length
+    eval_q=3,  # RVQ quantizers (1-6)
+    excerpt_length=3.0,  # Style excerpt length
 )
 
 # Load style reference
@@ -307,7 +307,7 @@ wav = model.generate_with_style(descriptions, style_audio, sr)
 model.set_generation_params(
     duration=30,
     cfg_coef=3.0,
-    cfg_coef_beta=None  # Disable double CFG for style-only
+    cfg_coef_beta=None,  # Disable double CFG for style-only
 )
 
 wav = model.generate_with_style([None], style_audio, sr)
@@ -321,7 +321,7 @@ wav = model.generate_with_style([None], style_audio, sr)
 from audiocraft.models import AudioGen
 import torchaudio
 
-model = AudioGen.get_pretrained('facebook/audiogen-medium')
+model = AudioGen.get_pretrained("facebook/audiogen-medium")
 model.set_generation_params(duration=10)
 
 # Generate various sounds
@@ -329,7 +329,7 @@ descriptions = [
     "thunderstorm with heavy rain and lightning",
     "busy city traffic with car horns",
     "ocean waves crashing on rocks",
-    "crackling campfire in forest"
+    "crackling campfire in forest",
 ]
 
 wav = model.generate(descriptions)
@@ -348,7 +348,7 @@ import torch
 import torchaudio
 
 # Load EnCodec
-model = CompressionModel.get_pretrained('facebook/encodec_32khz')
+model = CompressionModel.get_pretrained("facebook/encodec_32khz")
 
 # Load audio
 wav, sr = torchaudio.load("audio.wav")
@@ -379,6 +379,7 @@ import torch
 import torchaudio
 from audiocraft.models import MusicGen
 
+
 class MusicGenerator:
     def __init__(self, model_name="facebook/musicgen-medium"):
         self.model = MusicGen.get_pretrained(model_name)
@@ -386,10 +387,7 @@ class MusicGenerator:
 
     def generate(self, prompt, duration=30, temperature=1.0, cfg=3.0):
         self.model.set_generation_params(
-            duration=duration,
-            top_k=250,
-            temperature=temperature,
-            cfg_coef=cfg
+            duration=duration, top_k=250, temperature=temperature, cfg_coef=cfg
         )
 
         with torch.no_grad():
@@ -408,12 +406,11 @@ class MusicGenerator:
     def save(self, audio, path):
         torchaudio.save(path, audio, sample_rate=self.sample_rate)
 
+
 # Usage
 generator = MusicGenerator()
 audio = generator.generate(
-    "epic cinematic orchestral music",
-    duration=30,
-    temperature=1.0
+    "epic cinematic orchestral music", duration=30, temperature=1.0
 )
 generator.save(audio, "epic_music.wav")
 ```
@@ -426,6 +423,7 @@ from pathlib import Path
 from audiocraft.models import AudioGen
 import torchaudio
 
+
 def batch_generate_sounds(sound_specs, output_dir):
     """
     Generate multiple sounds from specifications.
@@ -434,7 +432,7 @@ def batch_generate_sounds(sound_specs, output_dir):
         sound_specs: list of {"name": str, "description": str, "duration": float}
         output_dir: output directory path
     """
-    model = AudioGen.get_pretrained('facebook/audiogen-medium')
+    model = AudioGen.get_pretrained("facebook/audiogen-medium")
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True)
 
@@ -451,16 +449,21 @@ def batch_generate_sounds(sound_specs, output_dir):
         results.append({
             "name": spec["name"],
             "path": str(output_path),
-            "description": spec["description"]
+            "description": spec["description"],
         })
 
     return results
 
+
 # Usage
 sounds = [
-    {"name": "explosion", "description": "massive explosion with debris", "duration": 3},
+    {
+        "name": "explosion",
+        "description": "massive explosion with debris",
+        "duration": 3,
+    },
     {"name": "footsteps", "description": "footsteps on wooden floor", "duration": 5},
-    {"name": "door", "description": "wooden door creaking and closing", "duration": 2}
+    {"name": "door", "description": "wooden door creaking and closing", "duration": 2},
 ]
 
 results = batch_generate_sounds(sounds, "sound_effects/")
@@ -474,13 +477,12 @@ import torch
 import torchaudio
 from audiocraft.models import MusicGen
 
-model = MusicGen.get_pretrained('facebook/musicgen-small')
+model = MusicGen.get_pretrained("facebook/musicgen-small")
+
 
 def generate_music(prompt, duration, temperature, cfg_coef):
     model.set_generation_params(
-        duration=duration,
-        temperature=temperature,
-        cfg_coef=cfg_coef
+        duration=duration, temperature=temperature, cfg_coef=cfg_coef
     )
 
     with torch.no_grad():
@@ -491,16 +493,19 @@ def generate_music(prompt, duration, temperature, cfg_coef):
     torchaudio.save(path, wav[0].cpu(), sample_rate=32000)
     return path
 
+
 demo = gr.Interface(
     fn=generate_music,
     inputs=[
-        gr.Textbox(label="Music Description", placeholder="upbeat electronic dance music"),
+        gr.Textbox(
+            label="Music Description", placeholder="upbeat electronic dance music"
+        ),
         gr.Slider(1, 30, value=8, label="Duration (seconds)"),
         gr.Slider(0.5, 2.0, value=1.0, label="Temperature"),
-        gr.Slider(1.0, 10.0, value=3.0, label="CFG Coefficient")
+        gr.Slider(1.0, 10.0, value=3.0, label="CFG Coefficient"),
     ],
     outputs=gr.Audio(label="Generated Music"),
-    title="MusicGen Demo"
+    title="MusicGen Demo",
 )
 
 demo.launch()
@@ -512,7 +517,7 @@ demo.launch()
 
 ```python
 # Use smaller model
-model = MusicGen.get_pretrained('facebook/musicgen-small')
+model = MusicGen.get_pretrained("facebook/musicgen-small")
 
 # Clear cache between generations
 torch.cuda.empty_cache()

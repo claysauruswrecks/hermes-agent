@@ -117,7 +117,7 @@ from llama_cpp import Llama
 llm = Llama(
     model_path="./model-q4_k_m.gguf",
     n_ctx=4096,
-    n_gpu_layers=35,     # 0 for CPU, 99 to offload everything
+    n_gpu_layers=35,  # 0 for CPU, 99 to offload everything
     n_threads=8,
 )
 
@@ -132,7 +132,7 @@ llm = Llama(
     model_path="./model-q4_k_m.gguf",
     n_ctx=4096,
     n_gpu_layers=35,
-    chat_format="llama-3",   # or "chatml", "mistral", etc.
+    chat_format="llama-3",  # or "chatml", "mistral", etc.
 )
 
 resp = llm.create_chat_completion(

@@ -91,8 +91,8 @@ def _live_subcommand_names() -> set[str]:
         (["hermes", "-m", "gpt5", "--provider", "openai", "chat"], "chat"),
         (["hermes", "-z", "hello world"], None),
         (["hermes", "-z", "hello", "chat"], "chat"),
-        (["hermes", "--model=gpt5", "chat"], "chat"),     # inline form
-        (["hermes", "--", "chat"], "chat"),               # -- terminator
+        (["hermes", "--model=gpt5", "chat"], "chat"),  # inline form
+        (["hermes", "--", "chat"], "chat"),  # -- terminator
         (["hermes", "-w", "--"], None),
         # Unknown positional after skipped flags → plugin-cmd candidate.
         (["hermes", "some-plugin-cmd"], "some-plugin-cmd"),
@@ -110,17 +110,17 @@ def test_first_positional_argv(argv, expected):
 @pytest.mark.parametrize(
     "argv",
     [
-        ["hermes"],                          # bare → chat
-        ["hermes", "--help"],                # top-level help
+        ["hermes"],  # bare → chat
+        ["hermes", "--help"],  # top-level help
         ["hermes", "-h"],
-        ["hermes", "version"],               # known built-in
+        ["hermes", "version"],  # known built-in
         ["hermes", "logs"],
         ["hermes", "gateway", "run"],
         ["hermes", "--tui"],
         ["hermes", "-w", "--tui"],
         ["hermes", "chat", "hi"],
-        ["hermes", "help"],                  # accepted built-in-ish
-        ["hermes", "-m", "gpt5", "chat"],    # flag-value-skipping
+        ["hermes", "help"],  # accepted built-in-ish
+        ["hermes", "-m", "gpt5", "chat"],  # flag-value-skipping
     ],
 )
 def test_discovery_skipped_for_builtins(argv):
@@ -131,8 +131,8 @@ def test_discovery_skipped_for_builtins(argv):
 @pytest.mark.parametrize(
     "argv",
     [
-        ["hermes", "meet", "join"],          # potential google_meet plugin
-        ["hermes", "honcho", "status"],      # potential memory plugin
+        ["hermes", "meet", "join"],  # potential google_meet plugin
+        ["hermes", "honcho", "status"],  # potential memory plugin
         ["hermes", "unknown-subcmd"],
     ],
 )

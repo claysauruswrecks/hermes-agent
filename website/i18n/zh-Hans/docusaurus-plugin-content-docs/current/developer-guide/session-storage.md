@@ -177,7 +177,7 @@ _CHECKPOINT_EVERY_N_WRITES = 50
 ```python
 from hermes_state import SessionDB
 
-db = SessionDB()                           # 默认：~/.hermes/state.db
+db = SessionDB()  # 默认：~/.hermes/state.db
 db = SessionDB(db_path=Path("/tmp/test.db"))  # 自定义路径
 ```
 

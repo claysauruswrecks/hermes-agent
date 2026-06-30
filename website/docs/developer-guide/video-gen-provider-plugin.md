@@ -196,6 +196,7 @@ FAMILIES = {
     },
 }
 
+
 def generate(self, prompt, *, image_url=None, model=None, **kwargs):
     family_id, family = _resolve_family(model)
     endpoint = family["image_endpoint"] if image_url else family["text_endpoint"]

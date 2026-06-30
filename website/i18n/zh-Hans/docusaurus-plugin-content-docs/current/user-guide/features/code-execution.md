@@ -73,7 +73,7 @@ for r in results["data"]["web"]:
             summaries.append({
                 "title": r["title"],
                 "url": r["url"],
-                "excerpt": p["content"][:500]
+                "excerpt": p["content"][:500],
             })
 
 print(json.dumps(summaries, indent=2))
@@ -92,7 +92,7 @@ for match in matches.get("matches", []):
         path=match["path"],
         old_string="old_api_call(",
         new_string="new_api_call(",
-        replace_all=True
+        replace_all=True,
     )
     if "error" not in str(result):
         fixed += 1
@@ -120,7 +120,7 @@ report = {
     "failed": failed,
     "errors": errors,
     "exit_code": result.get("exit_code", -1),
-    "summary": output[-500:] if len(output) > 500 else output
+    "summary": output[-500:] if len(output) > 500 else output,
 }
 
 print(json.dumps(report, indent=2))

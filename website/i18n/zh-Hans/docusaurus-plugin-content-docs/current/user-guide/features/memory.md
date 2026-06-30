@@ -62,9 +62,12 @@ Agent 使用 `memory` 工具执行以下操作：
 
 ```python
 # If memory contains "User prefers dark mode in all editors"
-memory(action="replace", target="memory",
-       old_text="dark mode",
-       content="User prefers light mode in VS Code, dark mode in terminal")
+memory(
+    action="replace",
+    target="memory",
+    old_text="dark mode",
+    content="User prefers light mode in VS Code, dark mode in terminal",
+)
 ```
 
 如果子字符串匹配到多个条目，则返回错误，要求提供更具体的匹配内容。

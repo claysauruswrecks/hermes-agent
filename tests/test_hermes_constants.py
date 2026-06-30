@@ -80,7 +80,9 @@ class TestGetDefaultHermesRoot:
         monkeypatch.setenv("HERMES_HOME", str(profile))
         assert get_default_hermes_root() == docker_root
 
-    def test_no_hermes_home_returns_localappdata_root_on_windows(self, tmp_path, monkeypatch):
+    def test_no_hermes_home_returns_localappdata_root_on_windows(
+        self, tmp_path, monkeypatch
+    ):
         """Native Windows falls back to %LOCALAPPDATA%\\hermes, not ~/.hermes."""
         local_appdata = tmp_path / "LocalAppData"
         monkeypatch.delenv("HERMES_HOME", raising=False)
@@ -90,7 +92,9 @@ class TestGetDefaultHermesRoot:
 
         assert get_default_hermes_root() == local_appdata / "hermes"
 
-    def test_no_hermes_home_uses_windows_path_when_localappdata_missing(self, tmp_path, monkeypatch):
+    def test_no_hermes_home_uses_windows_path_when_localappdata_missing(
+        self, tmp_path, monkeypatch
+    ):
         """Windows fallback still uses AppData/Local/hermes without LOCALAPPDATA."""
         home = tmp_path / "Home"
         monkeypatch.delenv("HERMES_HOME", raising=False)
@@ -154,7 +158,9 @@ class TestHermesManagedNode:
 
         assert find_node_executable_on_path("npm") == str(npm_cmd)
 
-    def test_windows_node_executable_falls_back_to_safe_path_shim(self, tmp_path, monkeypatch):
+    def test_windows_node_executable_falls_back_to_safe_path_shim(
+        self, tmp_path, monkeypatch
+    ):
         home = tmp_path / "hermes"
         home.mkdir()
         bin_dir = tmp_path / "nodejs"
@@ -169,7 +175,9 @@ class TestHermesManagedNode:
 
         assert find_node_executable("npm") == str(npm_cmd)
 
-    def test_windows_skips_broken_managed_npm_without_path_fallback(self, tmp_path, monkeypatch):
+    def test_windows_skips_broken_managed_npm_without_path_fallback(
+        self, tmp_path, monkeypatch
+    ):
         home = tmp_path / "hermes"
         managed_npm = home / "node" / "npm.cmd"
         managed_npm.parent.mkdir(parents=True)
@@ -193,7 +201,9 @@ class TestHermesManagedNode:
         assert find_node_executable("npm") is None
         assert find_node_executable("npm") != str(path_npm)
 
-    def test_with_hermes_node_path_prepends_existing_managed_dirs(self, tmp_path, monkeypatch):
+    def test_with_hermes_node_path_prepends_existing_managed_dirs(
+        self, tmp_path, monkeypatch
+    ):
         home = tmp_path / "hermes"
         node_dir = home / "node"
         bin_dir = node_dir / "bin"
@@ -209,7 +219,9 @@ class TestHermesManagedNode:
         assert parts[-1] == "system-node"
 
 
-@pytest.mark.skipif(os.name == "nt", reason="POSIX shell stubs; Windows uses .cmd shims")
+@pytest.mark.skipif(
+    os.name == "nt", reason="POSIX shell stubs; Windows uses .cmd shims"
+)
 class TestNodeToolRunnable:
     """node_tool_runnable() rejects broken Hermes-managed npm/node wrappers."""
 
@@ -261,12 +273,16 @@ class TestNodeToolRunnable:
         assert resolved == str(broken_npm)
         assert resolved != str(system_bin / "npm")
 
-    def test_broken_managed_npm_heals_instead_of_path_fallback(self, tmp_path, monkeypatch):
+    def test_broken_managed_npm_heals_instead_of_path_fallback(
+        self, tmp_path, monkeypatch
+    ):
         profile_home = tmp_path / "profiles" / "assistant"
         managed_bin = profile_home / "node" / "bin"
         managed_bin.mkdir(parents=True)
         broken_npm = self._stub(managed_bin, "npm", "#!/bin/sh\nexit 1\n")
-        healed_npm = self._stub(managed_bin, "npm", "#!/bin/sh\necho '22.0.0'\nexit 0\n")
+        healed_npm = self._stub(
+            managed_bin, "npm", "#!/bin/sh\necho '22.0.0'\nexit 0\n"
+        )
 
         system_bin = tmp_path / "system-bin"
         system_bin.mkdir()
@@ -287,7 +303,9 @@ class TestNodeToolRunnable:
         assert find_node_executable("npm") == str(healed_npm)
         assert find_node_executable("npm") != str(good_npm)
 
-    def test_broken_managed_npm_returns_none_when_heal_fails(self, tmp_path, monkeypatch):
+    def test_broken_managed_npm_returns_none_when_heal_fails(
+        self, tmp_path, monkeypatch
+    ):
         profile_home = tmp_path / "profiles" / "assistant"
         managed_bin = profile_home / "node" / "bin"
         managed_bin.mkdir(parents=True)
@@ -308,7 +326,9 @@ class TestNodeToolRunnable:
         profile_home = tmp_path / "profiles" / "assistant"
         managed_bin = profile_home / "node" / "bin"
         managed_bin.mkdir(parents=True)
-        managed_npm = self._stub(managed_bin, "npm", "#!/bin/sh\necho '22.0.0'\nexit 0\n")
+        managed_npm = self._stub(
+            managed_bin, "npm", "#!/bin/sh\necho '22.0.0'\nexit 0\n"
+        )
 
         system_bin = tmp_path / "system-bin"
         system_bin.mkdir()
@@ -342,17 +362,26 @@ class TestIsContainer:
     def test_detects_cgroup_docker(self, monkeypatch, tmp_path):
         """/proc/1/cgroup containing 'docker' triggers detection."""
         import builtins
+
         self._reset_cache(monkeypatch)
         monkeypatch.setattr(os.path, "exists", lambda p: False)
         cgroup_file = tmp_path / "cgroup"
         cgroup_file.write_text("12:memory:/docker/abc123\n")
         _real_open = builtins.open
-        monkeypatch.setattr("builtins.open", lambda p, *a, **kw: _real_open(str(cgroup_file), *a, **kw) if p == "/proc/1/cgroup" else _real_open(p, *a, **kw))
+        monkeypatch.setattr(
+            "builtins.open",
+            lambda p, *a, **kw: (
+                _real_open(str(cgroup_file), *a, **kw)
+                if p == "/proc/1/cgroup"
+                else _real_open(p, *a, **kw)
+            ),
+        )
         assert is_container() is True
 
     def test_negative_case(self, monkeypatch, tmp_path):
         """Returns False on a regular Linux host."""
         import builtins
+
         self._reset_cache(monkeypatch)
         monkeypatch.delenv("KUBERNETES_SERVICE_HOST", raising=False)
         monkeypatch.setattr(os.path, "exists", lambda p: False)
@@ -382,18 +411,27 @@ class TestIsContainer:
     def test_detects_cgroup_kubepods(self, monkeypatch, tmp_path):
         """/proc/1/cgroup containing 'kubepods' triggers detection."""
         import builtins
+
         self._reset_cache(monkeypatch)
         monkeypatch.delenv("KUBERNETES_SERVICE_HOST", raising=False)
         monkeypatch.setattr(os.path, "exists", lambda p: False)
         cgroup_file = tmp_path / "cgroup"
         cgroup_file.write_text("12:memory:/kubepods/besteffort/podabc\n")
         _real_open = builtins.open
-        monkeypatch.setattr("builtins.open", lambda p, *a, **kw: _real_open(str(cgroup_file), *a, **kw) if p == "/proc/1/cgroup" else _real_open(p, *a, **kw))
+        monkeypatch.setattr(
+            "builtins.open",
+            lambda p, *a, **kw: (
+                _real_open(str(cgroup_file), *a, **kw)
+                if p == "/proc/1/cgroup"
+                else _real_open(p, *a, **kw)
+            ),
+        )
         assert is_container() is True
 
     def test_detects_cgroup_v2_via_mountinfo(self, monkeypatch, tmp_path):
         """cgroup v2 (0::/ only) falls back to containerd marker in mountinfo."""
         import builtins
+
         self._reset_cache(monkeypatch)
         monkeypatch.delenv("KUBERNETES_SERVICE_HOST", raising=False)
         monkeypatch.setattr(os.path, "exists", lambda p: False)
@@ -523,10 +561,12 @@ class TestSecureParentDir:
 
         # Mock Path.resolve to return a short path regardless of OS quirks
         original_resolve = Path.resolve
+
         def mock_resolve(self):
             if str(self) == "/x/y":
                 return Path("/x")
             return original_resolve(self)
+
         monkeypatch.setattr(Path, "resolve", mock_resolve)
 
         secure_parent_dir(Path("/x/y"))
@@ -568,7 +608,9 @@ class TestSecureParentDir:
         assert called_with[0] == (str(real_dir), 0o700)
 
 
-@pytest.mark.skipif(os.name == "nt", reason="POSIX shell stubs; Windows uses .cmd shims")
+@pytest.mark.skipif(
+    os.name == "nt", reason="POSIX shell stubs; Windows uses .cmd shims"
+)
 class TestAgentBrowserRunnable:
     """agent_browser_runnable() validates the resolved CLI actually runs.
 
@@ -595,7 +637,11 @@ class TestAgentBrowserRunnable:
         assert agent_browser_runnable(str(link)) is False
 
     def test_runnable_binary_accepted(self, tmp_path):
-        good = self._stub(tmp_path, "agent-browser", "#!/bin/sh\necho 'agent-browser 0.27.1'\nexit 0\n")
+        good = self._stub(
+            tmp_path,
+            "agent-browser",
+            "#!/bin/sh\necho 'agent-browser 0.27.1'\nexit 0\n",
+        )
         assert agent_browser_runnable(str(good)) is True
 
     def test_nonzero_exit_rejected(self, tmp_path):
@@ -603,7 +649,9 @@ class TestAgentBrowserRunnable:
         assert agent_browser_runnable(str(bad)) is False
 
     def test_not_executable_rejected(self, tmp_path):
-        noexec = self._stub(tmp_path, "agent-browser", "#!/bin/sh\necho hi\n", mode=0o644)
+        noexec = self._stub(
+            tmp_path, "agent-browser", "#!/bin/sh\necho hi\n", mode=0o644
+        )
         assert agent_browser_runnable(str(noexec)) is False
 
     def test_npx_fallback_form_accepted(self):
@@ -629,7 +677,6 @@ class TestAgentBrowserRunnable:
         assert agent_browser_runnable(str(good)) is True
         assert captured[0][0] == [str(good), "--version"]
         assert captured[0][1]["creationflags"] == 0x08000000
-
 
     def test_node_tool_probe_uses_windows_hide_flags(self, tmp_path, monkeypatch):
         good = self._stub(tmp_path, "node", "#!/bin/sh\necho v22\n")
@@ -749,9 +796,7 @@ class TestGetHermesDir:
             return real_iterdir(self)
 
         monkeypatch.setattr(Path, "iterdir", boom)
-        result = get_hermes_dir(
-            "platforms/whatsapp/session", "whatsapp/session"
-        )
+        result = get_hermes_dir("platforms/whatsapp/session", "whatsapp/session")
         assert result == legacy
 
     def test_unstatable_legacy_dir_kept(self, tmp_path, monkeypatch):

@@ -162,8 +162,51 @@ tts:
   openai:
     max_text_length: 8192   # raise or lower the provider cap
 ```
-
 Only positive integers are honored. Zero, negative, non-numeric, or boolean values fall through to the provider default, so a broken config can't accidentally disable truncation.
+
+## Reasoning & Thinking TTS Playback
+
+Hermes can read model thinking and reasoning traces (e.g. ```` or `reasoning_content`) out loud using a separate voice or provider from your main TTS settings. This is useful for hearing the agent's thought process without mixing it with final answers or tool-use summaries.
+
+Enable reasoning TTS in `~/.hermes/config.yaml`:
+
+```yaml
+tts_reasoning:
+  enabled: true                 # Turn on thinking/reasoning voice playback
+  provider: edge                # Override default tts provider, or use same (edge, elevenlabs, openai, minimax, mistral, gemini, xai)
+  edge:
+    voice: "en-US-AriaNeural"   # Reasoning-specific Edge voice
+  elevenlabs:
+    voice_id: "pNInz6obpgDQGcFmaJgB"  # Adam (or different for reasoning)
+    model_id: "eleven_multilingual_v2"
+  openai:
+    model: "gpt-4o-mini-tts"
+    voice: "alloy"
+```
+
+When `tts_reasoning.enabled: true`, the agent streams reasoning/thinking text to a separate TTS playback thread using the configured provider and voice. This happens in parallel with normal display callbacks, so the thinking block still appears on-screen while being spoken aloud.
+
+## Tool-Use & Generation TTS Playback
+
+Hermes can also read tool-generation or tool-use summaries out loud (e.g., "Generating output for write_file...") using `tts_tool_use`. This helps you hear when the agent is preparing to call tools or generate large outputs, giving auditory feedback during long tool payloads.
+
+Enable tool-use TTS in `~/.hermes/config.yaml`:
+
+```yaml
+tts_tool_use:
+  enabled: true                 # Turn on tool-generation/use voice playback
+  provider: edge                # Override default tts provider
+  edge:
+    voice: "en-US-AriaNeural"   # Tool-specific Edge voice
+  elevenlabs:
+    voice_id: "pNInz6obpgDQGcFmaJgB"
+    model_id: "eleven_multilingual_v2"
+  openai:
+    model: "gpt-4o-mini-tts"
+    voice: "alloy"
+```
+
+When `tts_tool_use.enabled: true`, the agent speaks a short tool context phrase (e.g., "Tool: write_file", "Generating tool output...") before or during tool argument generation. This happens via a separate TTS queue and thread, so it doesn't interfere with normal response text or reasoning TTS.
 
 ### Telegram Voice Bubbles & ffmpeg
 
@@ -374,14 +417,25 @@ class MyTTSProvider(TTSProvider):
         # Return False when credentials/deps are missing — picker skips
         # this row but the dispatcher still routes here on explicit config.
         import os
+
         return bool(os.environ.get("MY_TTS_API_KEY"))
 
-    def synthesize(self, text, output_path, *, voice=None, model=None,
-                   speed=None, format="mp3", **extra) -> str:
+    def synthesize(
+        self,
+        text,
+        output_path,
+        *,
+        voice=None,
+        model=None,
+        speed=None,
+        format="mp3",
+        **extra,
+    ) -> str:
         # Write audio bytes to output_path, return the path.
         # Raise on failure — the dispatcher converts exceptions to a
         # standard error envelope.
         import my_tts_sdk
+
         client = my_tts_sdk.Client()
         audio_bytes = client.synthesize(text=text, voice=voice or "default")
         with open(output_path, "wb") as f:
@@ -630,6 +684,7 @@ class MySTTProvider(TranscriptionProvider):
         # Return False when credentials/deps are missing — picker skips
         # this row but the dispatcher still routes here on explicit config.
         import os
+
         return bool(os.environ.get("MY_STT_API_KEY"))
 
     def transcribe(self, file_path, *, model=None, language=None, **extra):
@@ -639,6 +694,7 @@ class MySTTProvider(TranscriptionProvider):
         # gateway/CLI caller sees a consistent shape on failure.
         try:
             import my_stt_sdk
+
             client = my_stt_sdk.Client()
             text = client.transcribe(open(file_path, "rb"))
             return {

@@ -113,6 +113,7 @@ author: Your Name
 from typing import Any
 from providers.base import ProviderProfile
 
+
 class AcmeProfile(ProviderProfile):
     def prepare_messages(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """提供商特定的消息预处理。在 codex 清理之后、developer-role 替换之前运行。
@@ -164,14 +165,16 @@ class AcmeProfile(ProviderProfile):
 from providers import register_provider
 from providers.base import ProviderProfile
 
-register_provider(ProviderProfile(
-    name="gmi",
-    aliases=("gmi-cloud", "gmicloud"),
-    env_vars=("GMI_API_KEY",),
-    base_url="https://gmi-staging.internal.example.com/v1",
-    auth_type="api_key",
-    default_aux_model="google/gemini-3.1-flash-lite-preview",
-))
+register_provider(
+    ProviderProfile(
+        name="gmi",
+        aliases=("gmi-cloud", "gmicloud"),
+        env_vars=("GMI_API_KEY",),
+        base_url="https://gmi-staging.internal.example.com/v1",
+        auth_type="api_key",
+        default_aux_model="google/gemini-3.1-flash-lite-preview",
+    )
+)
 ```
 
 下次会话时，`get_provider_profile("gmi").base_url` 将返回测试 URL。无需打补丁，无需重新构建。由于用户插件在内置插件之后被发现，用户的 `register_provider()` 调用会胜出。
@@ -215,6 +218,7 @@ hermes doctor
 
 ```python
 from providers import list_providers
+
 for p in list_providers():
     print(p.name, p.base_url, p.api_mode)
 ```

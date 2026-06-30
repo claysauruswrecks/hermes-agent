@@ -61,6 +61,7 @@ Use named ranges for any figure referenced from another sheet, a deck, or a memo
 
 ```python
 from openpyxl.workbook.defined_name import DefinedName
+
 wb.defined_names["WACC"] = DefinedName("WACC", attr_text="Inputs!$C$8")
 # then elsewhere:
 calc["D30"] = "=D29/WACC"
@@ -86,6 +87,7 @@ Add the comment AS you create the cell, not later.
 
 ```python
 from openpyxl.comments import Comment
+
 ws["C2"] = 1_250_000_000
 ws["C2"].font = Font(color="0000FF")
 ws["C2"].comment = Comment("Source: 10-K FY2024, p.47, revenue line", "analyst")
@@ -133,7 +135,7 @@ inp["C4"].font = BLUE
 # --- Calc tab ---
 calc = wb.create_sheet("DCF")
 calc["B2"] = "Projected Revenue"
-calc["C2"] = "=Inputs!C3*(1+Inputs!C4)"   # formula, black
+calc["C2"] = "=Inputs!C3*(1+Inputs!C4)"  # formula, black
 
 # --- Checks tab ---
 chk = wb.create_sheet("Checks")
@@ -167,16 +169,16 @@ Build with loops, not hardcoded formulas per cell. Rules:
 
 ```python
 # 5x5 WACC (rows) x terminal growth (cols) sensitivity
-wacc_axis = [0.08, 0.085, 0.09, 0.095, 0.10]        # center row = base 9.0%
-term_axis = [0.02, 0.025, 0.03, 0.035, 0.04]        # center col = base 3.0%
+wacc_axis = [0.08, 0.085, 0.09, 0.095, 0.10]  # center row = base 9.0%
+term_axis = [0.02, 0.025, 0.03, 0.035, 0.04]  # center col = base 3.0%
 
 start_row = 40
 ws.cell(row=start_row, column=1).value = "Implied Share Price ($)"
 ws.cell(row=start_row, column=1).font = BOLD
 
 for j, g in enumerate(term_axis):
-    ws.cell(row=start_row+1, column=2+j).value = g
-    ws.cell(row=start_row+1, column=2+j).font = BLUE
+    ws.cell(row=start_row + 1, column=2 + j).value = g
+    ws.cell(row=start_row + 1, column=2 + j).font = BLUE
 
 for i, w in enumerate(wacc_axis):
     r = start_row + 2 + i
@@ -192,8 +194,9 @@ for i, w in enumerate(wacc_axis):
         )
 
 # Highlight center cell (base case)
-center = ws.cell(row=start_row+2+len(wacc_axis)//2,
-                 column=2+len(term_axis)//2)
+center = ws.cell(
+    row=start_row + 2 + len(wacc_axis) // 2, column=2 + len(term_axis) // 2
+)
 center.fill = PatternFill("solid", fgColor="BDD7EE")
 center.font = BOLD
 ```

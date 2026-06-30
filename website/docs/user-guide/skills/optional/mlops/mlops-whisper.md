@@ -139,7 +139,7 @@ result = model.transcribe("spanish.mp3", task="translate")
 # Improve accuracy with context
 result = model.transcribe(
     "audio.mp3",
-    initial_prompt="This is a technical podcast about machine learning and AI."
+    initial_prompt="This is a technical podcast about machine learning and AI.",
 )
 
 # Helps with:
@@ -163,10 +163,7 @@ for segment in result["segments"]:
 
 ```python
 # Retry with different temperatures if confidence low
-result = model.transcribe(
-    "audio.mp3",
-    temperature=(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-)
+result = model.transcribe("audio.mp3", temperature=(0.0, 0.2, 0.4, 0.6, 0.8, 1.0))
 ```
 
 ## Command line usage

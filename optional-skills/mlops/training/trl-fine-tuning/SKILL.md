@@ -43,7 +43,7 @@ trainer = DPOTrainer(
     model=model,
     args=config,
     train_dataset=preference_dataset,  # chosen/rejected pairs
-    processing_class=tokenizer
+    processing_class=tokenizer,
 )
 trainer.train()
 ```
@@ -87,15 +87,12 @@ training_args = SFTConfig(
     num_train_epochs=1,
     learning_rate=2e-5,
     logging_steps=10,
-    save_strategy="epoch"
+    save_strategy="epoch",
 )
 
 # Train
 trainer = SFTTrainer(
-    model=model,
-    args=training_args,
-    train_dataset=dataset,
-    tokenizer=tokenizer
+    model=model, args=training_args, train_dataset=dataset, tokenizer=tokenizer
 )
 trainer.train()
 trainer.save_model()
@@ -112,7 +109,7 @@ from trl import RewardTrainer, RewardConfig
 # Load SFT model as base
 model = AutoModelForSequenceClassification.from_pretrained(
     "Qwen2.5-0.5B-SFT",
-    num_labels=1  # Single reward score
+    num_labels=1,  # Single reward score
 )
 tokenizer = AutoTokenizer.from_pretrained("Qwen2.5-0.5B-SFT")
 
@@ -124,15 +121,12 @@ training_args = RewardConfig(
     output_dir="Qwen2.5-0.5B-Reward",
     per_device_train_batch_size=2,
     num_train_epochs=1,
-    learning_rate=1e-5
+    learning_rate=1e-5,
 )
 
 # Train reward model
 trainer = RewardTrainer(
-    model=model,
-    args=training_args,
-    processing_class=tokenizer,
-    train_dataset=dataset
+    model=model, args=training_args, processing_class=tokenizer, train_dataset=dataset
 )
 trainer.train()
 trainer.save_model()
@@ -214,7 +208,7 @@ config = DPOConfig(
     beta=0.1,  # KL penalty strength
     max_prompt_length=512,
     max_length=1024,
-    logging_steps=10
+    logging_steps=10,
 )
 ```
 
@@ -228,10 +222,7 @@ model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
 
 trainer = DPOTrainer(
-    model=model,
-    args=config,
-    train_dataset=dataset,
-    processing_class=tokenizer
+    model=model, args=config, train_dataset=dataset, processing_class=tokenizer
 )
 
 trainer.train()
@@ -292,6 +283,7 @@ from transformers import pipeline
 
 reward_model = pipeline("text-classification", model="reward-model-path")
 
+
 def reward_from_model(completions, prompts, **kwargs):
     # Combine prompt + completion
     full_texts = [p + c for p, c in zip(prompts, completions)]
@@ -311,7 +303,7 @@ config = GRPOConfig(
     num_train_epochs=1,
     learning_rate=1e-5,
     num_generations=4,  # Generate 4 completions per prompt
-    max_new_tokens=128
+    max_new_tokens=128,
 )
 ```
 
@@ -328,7 +320,7 @@ trainer = GRPOTrainer(
     model="Qwen/Qwen2-0.5B-Instruct",
     reward_funcs=reward_function,  # Your reward function
     args=config,
-    train_dataset=dataset
+    train_dataset=dataset,
 )
 
 trainer.train()
@@ -374,7 +366,7 @@ Reduce batch size and sequence length:
 config = DPOConfig(
     per_device_train_batch_size=1,  # Reduce from 4
     max_length=512,  # Reduce from 1024
-    gradient_accumulation_steps=8  # Maintain effective batch
+    gradient_accumulation_steps=8,  # Maintain effective batch
 )
 ```
 
@@ -400,7 +392,7 @@ Check loss type and learning rate:
 ```python
 config = RewardConfig(
     learning_rate=1e-5,  # Try different LR
-    num_train_epochs=3  # Train longer
+    num_train_epochs=3,  # Train longer
 )
 ```
 
@@ -417,7 +409,7 @@ Adjust KL coefficient:
 ```python
 config = PPOConfig(
     kl_coef=0.1,  # Increase from 0.05
-    cliprange=0.1  # Reduce from 0.2
+    cliprange=0.1,  # Reduce from 0.2
 )
 ```
 

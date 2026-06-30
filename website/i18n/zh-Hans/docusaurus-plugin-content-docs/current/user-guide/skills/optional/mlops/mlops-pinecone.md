@@ -75,24 +75,22 @@ pc.create_index(
     name="my-index",
     dimension=1536,  # Must match embedding dimension
     metric="cosine",  # or "euclidean", "dotproduct"
-    spec=ServerlessSpec(cloud="aws", region="us-east-1")
+    spec=ServerlessSpec(cloud="aws", region="us-east-1"),
 )
 
 # Connect to index
 index = pc.Index("my-index")
 
 # Upsert vectors
-index.upsert(vectors=[
-    {"id": "vec1", "values": [0.1, 0.2, ...], "metadata": {"category": "A"}},
-    {"id": "vec2", "values": [0.3, 0.4, ...], "metadata": {"category": "B"}}
-])
+index.upsert(
+    vectors=[
+        {"id": "vec1", "values": [0.1, 0.2, ...], "metadata": {"category": "A"}},
+        {"id": "vec2", "values": [0.3, 0.4, ...], "metadata": {"category": "B"}},
+    ]
+)
 
 # Query
-results = index.query(
-    vector=[0.1, 0.2, ...],
-    top_k=5,
-    include_metadata=True
-)
+results = index.query(vector=[0.1, 0.2, ...], top_k=5, include_metadata=True)
 
 print(results["matches"])
 ```
@@ -108,9 +106,9 @@ pc.create_index(
     dimension=1536,
     metric="cosine",
     spec=ServerlessSpec(
-        cloud="aws",         # or "gcp", "azure"
-        region="us-east-1"
-    )
+        cloud="aws",  # or "gcp", "azure"
+        region="us-east-1",
+    ),
 )
 
 # Pod-based (for consistent performance)
@@ -120,10 +118,7 @@ pc.create_index(
     name="my-index",
     dimension=1536,
     metric="cosine",
-    spec=PodSpec(
-        environment="us-east1-gcp",
-        pod_type="p1.x1"
-    )
+    spec=PodSpec(environment="us-east1-gcp", pod_type="p1.x1"),
 )
 ```
 
@@ -131,17 +126,19 @@ pc.create_index(
 
 ```python
 # Single upsert
-index.upsert(vectors=[
-    {
-        "id": "doc1",
-        "values": [0.1, 0.2, ...],  # 1536 dimensions
-        "metadata": {
-            "text": "Document content",
-            "category": "tutorial",
-            "timestamp": "2025-01-01"
+index.upsert(
+    vectors=[
+        {
+            "id": "doc1",
+            "values": [0.1, 0.2, ...],  # 1536 dimensions
+            "metadata": {
+                "text": "Document content",
+                "category": "tutorial",
+                "timestamp": "2025-01-01",
+            },
         }
-    }
-])
+    ]
+)
 
 # Batch upsert (recommended)
 vectors = [
@@ -157,25 +154,16 @@ index.upsert(vectors=vectors, batch_size=100)
 ```python
 # Basic query
 results = index.query(
-    vector=[0.1, 0.2, ...],
-    top_k=10,
-    include_metadata=True,
-    include_values=False
+    vector=[0.1, 0.2, ...], top_k=10, include_metadata=True, include_values=False
 )
 
 # With metadata filtering
 results = index.query(
-    vector=[0.1, 0.2, ...],
-    top_k=5,
-    filter={"category": {"$eq": "tutorial"}}
+    vector=[0.1, 0.2, ...], top_k=5, filter={"category": {"$eq": "tutorial"}}
 )
 
 # Namespace query
-results = index.query(
-    vector=[0.1, 0.2, ...],
-    top_k=5,
-    namespace="production"
-)
+results = index.query(vector=[0.1, 0.2, ...], top_k=5, namespace="production")
 
 # Access results
 for match in results["matches"]:
@@ -194,12 +182,7 @@ filter = {"category": "tutorial"}
 filter = {"price": {"$gte": 100}}  # $gt, $gte, $lt, $lte, $ne
 
 # Logical operators
-filter = {
-    "$and": [
-        {"category": "tutorial"},
-        {"difficulty": {"$lte": 3}}
-    ]
-}  # Also: $or
+filter = {"$and": [{"category": "tutorial"}, {"difficulty": {"$lte": 3}}]}  # Also: $or
 
 # In operator
 filter = {"tags": {"$in": ["python", "ml"]}}
@@ -209,48 +192,40 @@ filter = {"tags": {"$in": ["python", "ml"]}}
 
 ```python
 # Partition data by namespace
-index.upsert(
-    vectors=[{"id": "vec1", "values": [...]}],
-    namespace="user-123"
-)
+index.upsert(vectors=[{"id": "vec1", "values": [...]}], namespace="user-123")
 
 # Query specific namespace
-results = index.query(
-    vector=[...],
-    namespace="user-123",
-    top_k=5
-)
+results = index.query(vector=[...], namespace="user-123", top_k=5)
 
 # List namespaces
 stats = index.describe_index_stats()
-print(stats['namespaces'])
+print(stats["namespaces"])
 ```
 
 ## 混合搜索（稠密 + 稀疏向量）
 
 ```python
 # Upsert with sparse vectors
-index.upsert(vectors=[
-    {
-        "id": "doc1",
-        "values": [0.1, 0.2, ...],  # Dense vector
-        "sparse_values": {
-            "indices": [10, 45, 123],  # Token IDs
-            "values": [0.5, 0.3, 0.8]   # TF-IDF scores
-        },
-        "metadata": {"text": "..."}
-    }
-])
+index.upsert(
+    vectors=[
+        {
+            "id": "doc1",
+            "values": [0.1, 0.2, ...],  # Dense vector
+            "sparse_values": {
+                "indices": [10, 45, 123],  # Token IDs
+                "values": [0.5, 0.3, 0.8],  # TF-IDF scores
+            },
+            "metadata": {"text": "..."},
+        }
+    ]
+)
 
 # Hybrid query
 results = index.query(
     vector=[0.1, 0.2, ...],
-    sparse_vector={
-        "indices": [10, 45],
-        "values": [0.5, 0.3]
-    },
+    sparse_vector={"indices": [10, 45], "values": [0.5, 0.3]},
     top_k=5,
-    alpha=0.5  # 0=sparse, 1=dense, 0.5=hybrid
+    alpha=0.5,  # 0=sparse, 1=dense, 0.5=hybrid
 )
 ```
 
@@ -262,20 +237,14 @@ from langchain_openai import OpenAIEmbeddings
 
 # Create vector store
 vectorstore = PineconeVectorStore.from_documents(
-    documents=docs,
-    embedding=OpenAIEmbeddings(),
-    index_name="my-index"
+    documents=docs, embedding=OpenAIEmbeddings(), index_name="my-index"
 )
 
 # Query
 results = vectorstore.similarity_search("query", k=5)
 
 # With metadata filter
-results = vectorstore.similarity_search(
-    "query",
-    k=5,
-    filter={"category": "tutorial"}
-)
+results = vectorstore.similarity_search("query", k=5, filter={"category": "tutorial"})
 
 # As retriever
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})

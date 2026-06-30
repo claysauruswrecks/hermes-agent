@@ -80,16 +80,17 @@ TDD：强制执行 RED-GREEN-REFACTOR，测试先于代码。
 ```python
 def test_retries_failed_operations_3_times():
     attempts = 0
+
     def operation():
         nonlocal attempts
         attempts += 1
         if attempts < 3:
-            raise Exception('fail')
-        return 'success'
+            raise Exception("fail")
+        return "success"
 
     result = retry_operation(operation)
 
-    assert result == 'success'
+    assert result == "success"
     assert attempts == 3
 ```
 名称清晰，测试真实行为，只测一件事。
@@ -98,9 +99,9 @@ def test_retries_failed_operations_3_times():
 ```python
 def test_retry_works():
     mock = MagicMock()
-    mock.side_effect = [Exception(), Exception(), 'success']
+    mock.side_effect = [Exception(), Exception(), "success"]
     result = retry_operation(mock)
-    assert result == 'success'  # 重试次数呢？时序呢？
+    assert result == "success"  # 重试次数呢？时序呢？
 ```
 名称模糊，测试的是 mock 而非真实代码。
 
@@ -334,7 +335,7 @@ delegate_task(
     Project test command: pytest tests/ -q
     Project structure: [describe relevant files]
     """,
-    toolsets=['terminal', 'file']
+    toolsets=["terminal", "file"],
 )
 ```
 

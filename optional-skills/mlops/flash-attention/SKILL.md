@@ -23,9 +23,11 @@ Flash Attention provides 2-4x speedup and 10-20x memory reduction for transforme
 import torch
 import torch.nn.functional as F
 
-q = torch.randn(2, 8, 512, 64, device='cuda', dtype=torch.float16)  # [batch, heads, seq, dim]
-k = torch.randn(2, 8, 512, 64, device='cuda', dtype=torch.float16)
-v = torch.randn(2, 8, 512, 64, device='cuda', dtype=torch.float16)
+q = torch.randn(
+    2, 8, 512, 64, device="cuda", dtype=torch.float16
+)  # [batch, heads, seq, dim]
+k = torch.randn(2, 8, 512, 64, device="cuda", dtype=torch.float16)
+v = torch.randn(2, 8, 512, 64, device="cuda", dtype=torch.float16)
 
 # Automatically uses Flash Attention if available
 out = F.scaled_dot_product_attention(q, k, v)
@@ -79,15 +81,14 @@ out = attn_weights @ v
 
 # After (Flash Attention)
 import torch.nn.functional as F
+
 out = F.scaled_dot_product_attention(q, k, v, attn_mask=mask)
 ```
 
 Force Flash Attention backend:
 ```python
 with torch.backends.cuda.sdp_kernel(
-    enable_flash=True,
-    enable_math=False,
-    enable_mem_efficient=False
+    enable_flash=True, enable_math=False, enable_mem_efficient=False
 ):
     out = F.scaled_dot_product_attention(q, k, v)
 ```
@@ -97,8 +98,12 @@ with torch.backends.cuda.sdp_kernel(
 ```python
 import torch.utils.benchmark as benchmark
 
+
 def test_attention(use_flash):
-    q, k, v = [torch.randn(2, 8, 2048, 64, device='cuda', dtype=torch.float16) for _ in range(3)]
+    q, k, v = [
+        torch.randn(2, 8, 2048, 64, device="cuda", dtype=torch.float16)
+        for _ in range(3)
+    ]
 
     if use_flash:
         with torch.backends.cuda.sdp_kernel(enable_flash=True):
@@ -107,9 +112,10 @@ def test_attention(use_flash):
         attn = (q @ k.transpose(-2, -1) / 8.0).softmax(dim=-1)
         return attn @ v
 
+
 # Benchmark
-t_flash = benchmark.Timer(stmt='test_attention(True)', globals=globals())
-t_standard = benchmark.Timer(stmt='test_attention(False)', globals=globals())
+t_flash = benchmark.Timer(stmt="test_attention(True)", globals=globals())
+t_standard = benchmark.Timer(stmt="test_attention(False)", globals=globals())
 
 print(f"Flash: {t_flash.timeit(100).mean:.3f}s")
 print(f"Standard: {t_standard.timeit(100).mean:.3f}s")
@@ -121,7 +127,9 @@ Expected: 2-4x speedup for sequences >512 tokens.
 
 ```python
 # Compare outputs
-q, k, v = [torch.randn(1, 8, 512, 64, device='cuda', dtype=torch.float16) for _ in range(3)]
+q, k, v = [
+    torch.randn(1, 8, 512, 64, device="cuda", dtype=torch.float16) for _ in range(3)
+]
 
 # Flash Attention
 out_flash = F.scaled_dot_product_attention(q, k, v)
@@ -172,11 +180,13 @@ k = k.transpose(1, 2)
 v = v.transpose(1, 2)
 
 out = flash_attn_func(
-    q, k, v,
+    q,
+    k,
+    v,
     dropout_p=0.1,
     causal=True,  # For autoregressive models
     window_size=(-1, -1),  # No sliding window
-    softmax_scale=None  # Auto-scale
+    softmax_scale=None,  # Auto-scale
 )
 
 out = out.transpose(1, 2)  # Back to [batch, heads, seq, dim]
@@ -197,9 +207,11 @@ Sliding window attention (local attention):
 ```python
 # Only attend to window of 256 tokens before/after
 out = flash_attn_func(
-    q, k, v,
+    q,
+    k,
+    v,
     window_size=(256, 256),  # (left, right) window
-    causal=True
+    causal=True,
 )
 ```
 
@@ -210,7 +222,9 @@ import torch
 from flash_attn import flash_attn_func
 import time
 
-q, k, v = [torch.randn(4, 4096, 32, 64, device='cuda', dtype=torch.float16) for _ in range(3)]
+q, k, v = [
+    torch.randn(4, 4096, 32, 64, device="cuda", dtype=torch.float16) for _ in range(3)
+]
 
 # Warmup
 for _ in range(10):
@@ -224,8 +238,8 @@ for _ in range(100):
     torch.cuda.synchronize()
 end = time.time()
 
-print(f"Time per iteration: {(end-start)/100*1000:.2f}ms")
-print(f"Memory allocated: {torch.cuda.max_memory_allocated()/1e9:.2f}GB")
+print(f"Time per iteration: {(end - start) / 100 * 1000:.2f}ms")
+print(f"Memory allocated: {torch.cuda.max_memory_allocated() / 1e9:.2f}GB")
 ```
 
 ### Workflow 3: H100 FP8 optimization (FlashAttention-3)
@@ -259,9 +273,9 @@ pip install flash-attn --no-build-isolation
 ```python
 import torch
 
-q = torch.randn(2, 4096, 32, 64, device='cuda', dtype=torch.float16)
-k = torch.randn(2, 4096, 32, 64, device='cuda', dtype=torch.float16)
-v = torch.randn(2, 4096, 32, 64, device='cuda', dtype=torch.float16)
+q = torch.randn(2, 4096, 32, 64, device="cuda", dtype=torch.float16)
+k = torch.randn(2, 4096, 32, 64, device="cuda", dtype=torch.float16)
+v = torch.randn(2, 4096, 32, 64, device="cuda", dtype=torch.float16)
 
 # Convert to float8_e4m3 (FP8)
 q_fp8 = q.to(torch.float8_e4m3fn)
@@ -322,6 +336,7 @@ Check sequence length is sufficient.
 Verify GPU supports Flash Attention:
 ```python
 import torch
+
 print(torch.cuda.get_device_capability())
 # Should be ≥(7, 5) for Turing+
 ```

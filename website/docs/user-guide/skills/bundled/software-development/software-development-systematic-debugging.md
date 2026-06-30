@@ -362,7 +362,7 @@ delegate_task(
     File: [path to failing code]
     Test command: [exact command]
     """,
-    toolsets=['terminal', 'file']
+    toolsets=["terminal", "file"],
 )
 ```
 

@@ -363,7 +363,11 @@ MY_TOOL_SCHEMA = {
             "type": "object",
             "properties": {
                 "param1": {"type": "string", "description": "What param1 is"},
-                "param2": {"type": "integer", "description": "What param2 is", "default": 10},
+                "param2": {
+                    "type": "integer",
+                    "description": "What param2 is",
+                    "default": 10,
+                },
             },
             "required": ["param1"],
         },
@@ -568,9 +572,12 @@ Every new or modernized skill — bundled, optional, or contributed — must mee
 1. **`description` ≤ 60 characters, one sentence, ends with a period.** Long descriptions bloat the skill listing UI and dilute the model's attention when many skills are loaded. State the capability, not the implementation. No marketing words ("powerful", "comprehensive", "seamless", "advanced"). Don't repeat the skill name. Verify with:
    ```python
    import re, pathlib
-   m = re.search(r'^description: (.*)$',
-                 pathlib.Path('skills/<cat>/<name>/SKILL.md').read_text(),
-                 re.MULTILINE)
+
+   m = re.search(
+       r"^description: (.*)$",
+       pathlib.Path("skills/<cat>/<name>/SKILL.md").read_text(),
+       re.MULTILINE,
+   )
    assert len(m.group(1)) <= 60, len(m.group(1))
    ```
 
@@ -697,6 +704,7 @@ that touches the OS, assume *any* platform can hit your code path.
 
    ```python
    import psutil
+
    if psutil.pid_exists(pid):
        # process is alive — safe on every platform
        ...
@@ -728,12 +736,13 @@ that touches the OS, assume *any* platform can hit your code path.
    ```python
    try:
        from simple_term_menu import TerminalMenu
+
        menu = TerminalMenu(options)
        idx = menu.show()
    except (ImportError, NotImplementedError):
        # Fallback: numbered menu for Windows
        for i, opt in enumerate(options):
-           print(f"  {i+1}. {opt}")
+           print(f"  {i + 1}. {opt}")
        idx = int(input("Choice: ")) - 1
    ```
 
@@ -763,6 +772,7 @@ that touches the OS, assume *any* platform can hit your code path.
    does on POSIX), use `psutil` — it works on every platform:
    ```python
    import psutil
+
    try:
        parent = psutil.Process(pid)
        # Kill children first (leaf-up), then the parent.

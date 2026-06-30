@@ -2068,6 +2068,44 @@ DEFAULT_CONFIG = {
             # "normalize_audio": True,
         },
     },
+    # Text-to-speech reasoning/thinking playback settings
+    # When display.show_reasoning is true, these settings control TTS playback of reasoning content.
+    # Separate voice models can be specified for thinking vs main content synthesis.
+    "tts_reasoning": {
+        "enabled": False,
+        "provider": "edge",  # Use same provider as default tts unless explicitly overridden
+        "edge": {
+            "voice": "en-US-AriaNeural",
+            # Default voice for reasoning/thinking playback when show_reasoning is true
+        },
+        "elevenlabs": {
+            "voice_id": "pNInz6obpgDQGcFmaJgB",  # Adam
+            "model_id": "eleven_multilingual_v2",
+        },
+        "openai": {
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+        },
+    },
+    # Text-to-speech tool-use/tool-generation playback settings
+    # When tools.tool_use_tts is true, these settings control TTS playback of tool generation/use content.
+    # Separate voice models can be specified for tool-use vs main content and reasoning synthesis.
+    "tts_tool_use": {
+        "enabled": False,
+        "provider": "edge",  # Use same provider as default tts unless explicitly overridden
+        "edge": {
+            "voice": "en-US-AriaNeural",
+            # Default voice for tool-use/tool-generation playback
+        },
+        "elevenlabs": {
+            "voice_id": "pNInz6obpgDQGcFmaJgB",  # Adam
+            "model_id": "eleven_multilingual_v2",
+        },
+        "openai": {
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+        },
+    },
     "stt": {
         "enabled": True,
         "provider": "local",  # "local" (free, faster-whisper) | "groq" | "openai" (Whisper API) | "mistral" (Voxtral Transcribe) | "elevenlabs" (Scribe)
@@ -2089,6 +2127,7 @@ DEFAULT_CONFIG = {
         },
     },
     "voice": {
+        "enabled": True,
         "record_key": "ctrl+b",
         "max_recording_seconds": 120,
         "auto_tts": False,

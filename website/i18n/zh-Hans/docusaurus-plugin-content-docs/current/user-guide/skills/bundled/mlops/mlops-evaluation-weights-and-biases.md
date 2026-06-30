@@ -71,8 +71,8 @@ run = wandb.init(
         "learning_rate": 0.001,
         "epochs": 10,
         "batch_size": 32,
-        "architecture": "ResNet50"
-    }
+        "architecture": "ResNet50",
+    },
 )
 
 # 训练循环
@@ -87,7 +87,7 @@ for epoch in range(run.config.epochs):
         "train/loss": train_loss,
         "val/loss": val_loss,
         "train/accuracy": train_acc,
-        "val/accuracy": val_acc
+        "val/accuracy": val_acc,
     })
 
 # 结束运行
@@ -101,10 +101,7 @@ import torch
 import wandb
 
 # 初始化
-wandb.init(project="pytorch-demo", config={
-    "lr": 0.001,
-    "epochs": 10
-})
+wandb.init(project="pytorch-demo", config={"lr": 0.001, "epochs": 10})
 
 # 访问配置
 config = wandb.config
@@ -123,11 +120,7 @@ for epoch in range(config.epochs):
 
         # 每 100 个 batch 记录一次
         if batch_idx % 100 == 0:
-            wandb.log({
-                "loss": loss.item(),
-                "epoch": epoch,
-                "batch": batch_idx
-            })
+            wandb.log({"loss": loss.item(), "epoch": epoch, "batch": batch_idx})
 
 # 保存模型
 torch.save(model.state_dict(), "model.pth")
@@ -148,8 +141,8 @@ wandb.finish()
 run = wandb.init(
     project="image-classification",
     name="resnet50-experiment-1",  # 可选的运行名称
-    tags=["baseline", "resnet"],    # 使用标签组织
-    notes="First baseline run"      # 添加备注
+    tags=["baseline", "resnet"],  # 使用标签组织
+    notes="First baseline run",  # 添加备注
 )
 
 # 每次运行都有唯一 ID
@@ -166,16 +159,14 @@ config = {
     # 模型架构
     "model": "ResNet50",
     "pretrained": True,
-
     # 训练参数
     "learning_rate": 0.001,
     "batch_size": 32,
     "epochs": 50,
     "optimizer": "Adam",
-
     # 数据参数
     "dataset": "ImageNet",
-    "augmentation": "standard"
+    "augmentation": "standard",
 }
 
 wandb.init(project="my-project", config=config)
@@ -198,7 +189,7 @@ wandb.log({
     "val/loss": val_loss,
     "val/accuracy": val_acc,
     "learning_rate": current_lr,
-    "epoch": epoch
+    "epoch": epoch,
 })
 
 # 使用自定义 x 轴记录
@@ -223,20 +214,20 @@ import wandb
 
 # 保存模型检查点
 checkpoint = {
-    'epoch': epoch,
-    'model_state_dict': model.state_dict(),
-    'optimizer_state_dict': optimizer.state_dict(),
-    'loss': loss,
+    "epoch": epoch,
+    "model_state_dict": model.state_dict(),
+    "optimizer_state_dict": optimizer.state_dict(),
+    "loss": loss,
 }
 
-torch.save(checkpoint, 'checkpoint.pth')
+torch.save(checkpoint, "checkpoint.pth")
 
 # 上传至 W&B
-wandb.save('checkpoint.pth')
+wandb.save("checkpoint.pth")
 
 # 或使用 Artifacts（推荐）
-artifact = wandb.Artifact('model', type='model')
-artifact.add_file('checkpoint.pth')
+artifact = wandb.Artifact("model", type="model")
+artifact.add_file("checkpoint.pth")
 wandb.log_artifact(artifact)
 ```
 
@@ -248,29 +239,14 @@ wandb.log_artifact(artifact)
 
 ```python
 sweep_config = {
-    'method': 'bayes',  # 或 'grid'、'random'
-    'metric': {
-        'name': 'val/accuracy',
-        'goal': 'maximize'
+    "method": "bayes",  # 或 'grid'、'random'
+    "metric": {"name": "val/accuracy", "goal": "maximize"},
+    "parameters": {
+        "learning_rate": {"distribution": "log_uniform", "min": 1e-5, "max": 1e-1},
+        "batch_size": {"values": [16, 32, 64, 128]},
+        "optimizer": {"values": ["adam", "sgd", "rmsprop"]},
+        "dropout": {"distribution": "uniform", "min": 0.1, "max": 0.5},
     },
-    'parameters': {
-        'learning_rate': {
-            'distribution': 'log_uniform',
-            'min': 1e-5,
-            'max': 1e-1
-        },
-        'batch_size': {
-            'values': [16, 32, 64, 128]
-        },
-        'optimizer': {
-            'values': ['adam', 'sgd', 'rmsprop']
-        },
-        'dropout': {
-            'distribution': 'uniform',
-            'min': 0.1,
-            'max': 0.5
-        }
-    }
 }
 
 # 初始化 sweep
@@ -299,10 +275,8 @@ def train():
         val_acc = validate(model)
 
         # 记录指标
-        wandb.log({
-            "train/loss": train_loss,
-            "val/accuracy": val_acc
-        })
+        wandb.log({"train/loss": train_loss, "val/accuracy": val_acc})
+
 
 # 运行 sweep
 wandb.agent(sweep_id, function=train, count=50)  # 运行 50 次试验
@@ -313,29 +287,27 @@ wandb.agent(sweep_id, function=train, count=50)  # 运行 50 次试验
 ```python
 # 网格搜索 - 穷举
 sweep_config = {
-    'method': 'grid',
-    'parameters': {
-        'lr': {'values': [0.001, 0.01, 0.1]},
-        'batch_size': {'values': [16, 32, 64]}
-    }
+    "method": "grid",
+    "parameters": {
+        "lr": {"values": [0.001, 0.01, 0.1]},
+        "batch_size": {"values": [16, 32, 64]},
+    },
 }
 
 # 随机搜索
 sweep_config = {
-    'method': 'random',
-    'parameters': {
-        'lr': {'distribution': 'uniform', 'min': 0.0001, 'max': 0.1},
-        'dropout': {'distribution': 'uniform', 'min': 0.1, 'max': 0.5}
-    }
+    "method": "random",
+    "parameters": {
+        "lr": {"distribution": "uniform", "min": 0.0001, "max": 0.1},
+        "dropout": {"distribution": "uniform", "min": 0.1, "max": 0.5},
+    },
 }
 
 # 贝叶斯优化（推荐）
 sweep_config = {
-    'method': 'bayes',
-    'metric': {'name': 'val/loss', 'goal': 'minimize'},
-    'parameters': {
-        'lr': {'distribution': 'log_uniform', 'min': 1e-5, 'max': 1e-1}
-    }
+    "method": "bayes",
+    "metric": {"name": "val/loss", "goal": "minimize"},
+    "parameters": {"lr": {"distribution": "log_uniform", "min": 1e-5, "max": 1e-1}},
 }
 ```
 
@@ -348,15 +320,15 @@ sweep_config = {
 ```python
 # 创建 artifact
 artifact = wandb.Artifact(
-    name='training-dataset',
-    type='dataset',
-    description='ImageNet training split',
-    metadata={'size': '1.2M images', 'split': 'train'}
+    name="training-dataset",
+    type="dataset",
+    description="ImageNet training split",
+    metadata={"size": "1.2M images", "split": "train"},
 )
 
 # 添加文件
-artifact.add_file('data/train.csv')
-artifact.add_dir('data/images/')
+artifact.add_file("data/train.csv")
+artifact.add_dir("data/images/")
 
 # 记录 artifact
 wandb.log_artifact(artifact)
@@ -369,7 +341,7 @@ wandb.log_artifact(artifact)
 run = wandb.init(project="my-project")
 
 # 下载 artifact
-artifact = run.use_artifact('training-dataset:latest')
+artifact = run.use_artifact("training-dataset:latest")
 artifact_dir = artifact.download()
 
 # 使用数据
@@ -381,16 +353,16 @@ data = load_data(f"{artifact_dir}/train.csv")
 ```python
 # 将模型记录为 artifact
 model_artifact = wandb.Artifact(
-    name='resnet50-model',
-    type='model',
-    metadata={'architecture': 'ResNet50', 'accuracy': 0.95}
+    name="resnet50-model",
+    type="model",
+    metadata={"architecture": "ResNet50", "accuracy": 0.95},
 )
 
-model_artifact.add_file('model.pth')
-wandb.log_artifact(model_artifact, aliases=['best', 'production'])
+model_artifact.add_file("model.pth")
+wandb.log_artifact(model_artifact, aliases=["best", "production"])
 
 # 链接到模型注册表
-run.link_artifact(model_artifact, 'model-registry/production-models')
+run.link_artifact(model_artifact, "model-registry/production-models")
 ```
 
 ## 集成示例
@@ -410,7 +382,7 @@ training_args = TrainingArguments(
     report_to="wandb",  # 启用 W&B 日志
     run_name="bert-finetuning",
     logging_steps=100,
-    save_steps=500
+    save_steps=500,
 )
 
 # Trainer 自动记录至 W&B
@@ -418,7 +390,7 @@ trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
-    eval_dataset=eval_dataset
+    eval_dataset=eval_dataset,
 )
 
 trainer.train()
@@ -434,14 +406,11 @@ import wandb
 # 创建 W&B logger
 wandb_logger = WandbLogger(
     project="lightning-demo",
-    log_model=True  # 记录模型检查点
+    log_model=True,  # 记录模型检查点
 )
 
 # 与 Trainer 配合使用
-trainer = Trainer(
-    logger=wandb_logger,
-    max_epochs=10
-)
+trainer = Trainer(logger=wandb_logger, max_epochs=10)
 
 trainer.fit(model, datamodule=dm)
 ```
@@ -457,10 +426,11 @@ wandb.init(project="keras-demo")
 
 # 添加回调
 model.fit(
-    x_train, y_train,
+    x_train,
+    y_train,
     validation_data=(x_val, y_val),
     epochs=10,
-    callbacks=[WandbCallback()]  # 自动记录指标
+    callbacks=[WandbCallback()],  # 自动记录指标
 )
 ```
 
@@ -477,12 +447,11 @@ ax.plot(x, y)
 wandb.log({"custom_plot": wandb.Image(fig)})
 
 # 记录混淆矩阵
-wandb.log({"conf_mat": wandb.plot.confusion_matrix(
-    probs=None,
-    y_true=ground_truth,
-    preds=predictions,
-    class_names=class_names
-)})
+wandb.log({
+    "conf_mat": wandb.plot.confusion_matrix(
+        probs=None, y_true=ground_truth, preds=predictions, class_names=class_names
+    )
+})
 ```
 
 ### Reports
@@ -502,7 +471,7 @@ wandb.init(
     project="my-project",
     tags=["baseline", "resnet50", "imagenet"],
     group="resnet-experiments",  # 对相关运行分组
-    job_type="train"             # 任务类型
+    job_type="train",  # 任务类型
 )
 ```
 
@@ -513,27 +482,21 @@ wandb.init(
 wandb.log({
     "gpu/util": gpu_utilization,
     "gpu/memory": gpu_memory_used,
-    "cpu/util": cpu_utilization
+    "cpu/util": cpu_utilization,
 })
 
 # 记录代码版本
 wandb.log({"git_commit": git_commit_hash})
 
 # 记录数据划分
-wandb.log({
-    "data/train_size": len(train_dataset),
-    "data/val_size": len(val_dataset)
-})
+wandb.log({"data/train_size": len(train_dataset), "data/val_size": len(val_dataset)})
 ```
 
 ### 3. 使用描述性名称
 
 ```python
 # ✅ 好：描述性运行名称
-wandb.init(
-    project="nlp-classification",
-    name="bert-base-lr0.001-bs32-epoch10"
-)
+wandb.init(project="nlp-classification", name="bert-base-lr0.001-bs32-epoch10")
 
 # ❌ 差：通用名称
 wandb.init(project="nlp", name="run1")
@@ -543,14 +506,13 @@ wandb.init(project="nlp", name="run1")
 
 ```python
 # 保存最终模型
-artifact = wandb.Artifact('final-model', type='model')
-artifact.add_file('model.pth')
+artifact = wandb.Artifact("final-model", type="model")
+artifact.add_file("model.pth")
 wandb.log_artifact(artifact)
 
 # 保存预测结果以供分析
 predictions_table = wandb.Table(
-    columns=["id", "input", "prediction", "ground_truth"],
-    data=predictions_data
+    columns=["id", "input", "prediction", "ground_truth"], data=predictions_data
 )
 wandb.log({"predictions": predictions_table})
 ```

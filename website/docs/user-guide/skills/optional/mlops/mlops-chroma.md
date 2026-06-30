@@ -82,14 +82,11 @@ collection = client.create_collection(name="my_collection")
 collection.add(
     documents=["This is document 1", "This is document 2"],
     metadatas=[{"source": "doc1"}, {"source": "doc2"}],
-    ids=["id1", "id2"]
+    ids=["id1", "id2"],
 )
 
 # Query
-results = collection.query(
-    query_texts=["document about topic"],
-    n_results=2
-)
+results = collection.query(query_texts=["document about topic"], n_results=2)
 
 print(results)
 ```
@@ -106,14 +103,10 @@ collection = client.create_collection("my_docs")
 from chromadb.utils import embedding_functions
 
 openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-    api_key="your-key",
-    model_name="text-embedding-3-small"
+    api_key="your-key", model_name="text-embedding-3-small"
 )
 
-collection = client.create_collection(
-    name="my_docs",
-    embedding_function=openai_ef
-)
+collection = client.create_collection(name="my_docs", embedding_function=openai_ef)
 
 # Get existing collection
 collection = client.get_collection("my_docs")
@@ -131,16 +124,16 @@ collection.add(
     metadatas=[
         {"source": "web", "category": "tutorial"},
         {"source": "pdf", "page": 5},
-        {"source": "api", "timestamp": "2025-01-01"}
+        {"source": "api", "timestamp": "2025-01-01"},
     ],
-    ids=["id1", "id2", "id3"]
+    ids=["id1", "id2", "id3"],
 )
 
 # Add with custom embeddings
 collection.add(
     embeddings=[[0.1, 0.2, ...], [0.3, 0.4, ...]],
     documents=["Doc 1", "Doc 2"],
-    ids=["id1", "id2"]
+    ids=["id1", "id2"],
 )
 ```
 
@@ -148,49 +141,34 @@ collection.add(
 
 ```python
 # Basic query
-results = collection.query(
-    query_texts=["machine learning tutorial"],
-    n_results=5
-)
+results = collection.query(query_texts=["machine learning tutorial"], n_results=5)
 
 # Query with filters
 results = collection.query(
-    query_texts=["Python programming"],
-    n_results=3,
-    where={"source": "web"}
+    query_texts=["Python programming"], n_results=3, where={"source": "web"}
 )
 
 # Query with metadata filters
 results = collection.query(
     query_texts=["advanced topics"],
-    where={
-        "$and": [
-            {"category": "tutorial"},
-            {"difficulty": {"$gte": 3}}
-        ]
-    }
+    where={"$and": [{"category": "tutorial"}, {"difficulty": {"$gte": 3}}]},
 )
 
 # Access results
-print(results["documents"])      # List of matching documents
-print(results["metadatas"])      # Metadata for each doc
-print(results["distances"])      # Similarity scores
-print(results["ids"])            # Document IDs
+print(results["documents"])  # List of matching documents
+print(results["metadatas"])  # Metadata for each doc
+print(results["distances"])  # Similarity scores
+print(results["ids"])  # Document IDs
 ```
 
 ### 4. Get documents
 
 ```python
 # Get by IDs
-docs = collection.get(
-    ids=["id1", "id2"]
-)
+docs = collection.get(ids=["id1", "id2"])
 
 # Get with filters
-docs = collection.get(
-    where={"category": "tutorial"},
-    limit=10
-)
+docs = collection.get(where={"category": "tutorial"}, limit=10)
 
 # Get all documents
 docs = collection.get()
@@ -201,9 +179,7 @@ docs = collection.get()
 ```python
 # Update document content
 collection.update(
-    ids=["id1"],
-    documents=["Updated content"],
-    metadatas=[{"source": "updated"}]
+    ids=["id1"], documents=["Updated content"], metadatas=[{"source": "updated"}]
 )
 ```
 
@@ -214,9 +190,7 @@ collection.update(
 collection.delete(ids=["id1", "id2"])
 
 # Delete with filter
-collection.delete(
-    where={"source": "outdated"}
-)
+collection.delete(where={"source": "outdated"})
 ```
 
 ## Persistent storage
@@ -250,28 +224,20 @@ collection = client.create_collection("my_docs")
 from chromadb.utils import embedding_functions
 
 openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-    api_key="your-key",
-    model_name="text-embedding-3-small"
+    api_key="your-key", model_name="text-embedding-3-small"
 )
 
-collection = client.create_collection(
-    name="openai_docs",
-    embedding_function=openai_ef
-)
+collection = client.create_collection(name="openai_docs", embedding_function=openai_ef)
 ```
 
 ### HuggingFace
 
 ```python
 huggingface_ef = embedding_functions.HuggingFaceEmbeddingFunction(
-    api_key="your-key",
-    model_name="sentence-transformers/all-mpnet-base-v2"
+    api_key="your-key", model_name="sentence-transformers/all-mpnet-base-v2"
 )
 
-collection = client.create_collection(
-    name="hf_docs",
-    embedding_function=huggingface_ef
-)
+collection = client.create_collection(name="hf_docs", embedding_function=huggingface_ef)
 ```
 
 ### Custom embedding function
@@ -279,48 +245,40 @@ collection = client.create_collection(
 ```python
 from chromadb import Documents, EmbeddingFunction, Embeddings
 
+
 class MyEmbeddingFunction(EmbeddingFunction):
     def __call__(self, input: Documents) -> Embeddings:
         # Your embedding logic
         return embeddings
 
+
 my_ef = MyEmbeddingFunction()
-collection = client.create_collection(
-    name="custom_docs",
-    embedding_function=my_ef
-)
+collection = client.create_collection(name="custom_docs", embedding_function=my_ef)
 ```
 
 ## Metadata filtering
 
 ```python
 # Exact match
-results = collection.query(
-    query_texts=["query"],
-    where={"category": "tutorial"}
-)
+results = collection.query(query_texts=["query"], where={"category": "tutorial"})
 
 # Comparison operators
 results = collection.query(
     query_texts=["query"],
-    where={"page": {"$gt": 10}}  # $gt, $gte, $lt, $lte, $ne
+    where={"page": {"$gt": 10}},  # $gt, $gte, $lt, $lte, $ne
 )
 
 # Logical operators
 results = collection.query(
     query_texts=["query"],
     where={
-        "$and": [
-            {"category": "tutorial"},
-            {"difficulty": {"$lte": 3}}
-        ]
-    }  # Also: $or
+        "$and": [{"category": "tutorial"}, {"difficulty": {"$lte": 3}}]
+    },  # Also: $or
 )
 
 # Contains
 results = collection.query(
-    query_texts=["query"],
-    where={"tags": {"$in": ["python", "ml"]}}
+    query_texts=["query"], where={"tags": {"$in": ["python", "ml"]}}
 )
 ```
 
@@ -337,9 +295,7 @@ docs = text_splitter.split_documents(documents)
 
 # Create Chroma vector store
 vectorstore = Chroma.from_documents(
-    documents=docs,
-    embedding=OpenAIEmbeddings(),
-    persist_directory="./chroma_db"
+    documents=docs, embedding=OpenAIEmbeddings(), persist_directory="./chroma_db"
 )
 
 # Query
@@ -365,10 +321,7 @@ vector_store = ChromaVectorStore(chroma_collection=collection)
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
 # Create index
-index = VectorStoreIndex.from_documents(
-    documents,
-    storage_context=storage_context
-)
+index = VectorStoreIndex.from_documents(documents, storage_context=storage_context)
 
 # Query
 query_engine = index.as_query_engine()
@@ -386,9 +339,7 @@ import chromadb
 from chromadb.config import Settings
 
 client = chromadb.HttpClient(
-    host="localhost",
-    port=8000,
-    settings=Settings(anonymized_telemetry=False)
+    host="localhost", port=8000, settings=Settings(anonymized_telemetry=False)
 )
 
 # Use as normal

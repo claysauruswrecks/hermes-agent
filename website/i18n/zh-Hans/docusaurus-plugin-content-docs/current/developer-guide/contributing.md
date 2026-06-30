@@ -140,12 +140,13 @@ Hermes 官方支持 **Linux、macOS、WSL2 以及原生 Windows（通过 PowerSh
 ```python
 try:
     from simple_term_menu import TerminalMenu
+
     menu = TerminalMenu(options)
     idx = menu.show()
 except (ImportError, NotImplementedError):
     # 回退：编号菜单
     for i, opt in enumerate(options):
-        print(f"  {i+1}. {opt}")
+        print(f"  {i + 1}. {opt}")
     idx = int(input("Choice: ")) - 1
 ```
 
@@ -166,6 +167,7 @@ except UnicodeDecodeError:
 
 ```python
 import platform
+
 if platform.system() != "Windows":
     kwargs["preexec_fn"] = os.setsid
 ```

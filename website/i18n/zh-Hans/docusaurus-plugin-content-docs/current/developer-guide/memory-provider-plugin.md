@@ -30,6 +30,7 @@ plugins/memory/my-provider/
 ```python
 from agent.memory_provider import MemoryProvider
 
+
 class MyMemoryProvider(MemoryProvider):
     @property
     def name(self) -> str:
@@ -93,9 +94,9 @@ def get_config_schema(self):
         {
             "key": "api_key",
             "description": "My Provider API key",
-            "secret": True,           # → 写入 .env
+            "secret": True,  # → 写入 .env
             "required": True,
-            "env_var": "MY_API_KEY",   # 显式指定环境变量名
+            "env_var": "MY_API_KEY",  # 显式指定环境变量名
             "url": "https://my-provider.com/keys",  # 获取密钥的地址
         },
         {
@@ -125,6 +126,7 @@ def save_config(self, values: dict, hermes_home: str) -> None:
     """将非敏感配置写入原生位置。"""
     import json
     from pathlib import Path
+
     config_path = Path(hermes_home) / "my-provider.json"
     config_path.write_text(json.dumps(values, indent=2))
 ```
@@ -174,6 +176,7 @@ def sync_turn(self, user_content, assistant_content):
 ```python
 # 正确 — 按 profile 隔离
 from hermes_constants import get_hermes_home
+
 data_dir = get_hermes_home() / "my-provider"
 
 # 错误 — 所有 profile 共享
@@ -218,6 +221,7 @@ Memory provider 插件可以注册自己的 CLI 子命令树（例如 `hermes my
 ```python
 # plugins/memory/my-provider/cli.py
 
+
 def my_command(args):
     """由 argparse 分发的处理函数。"""
     sub = getattr(args, "my_command", None)
@@ -227,6 +231,7 @@ def my_command(args):
         print("Showing config...")
     else:
         print("Usage: hermes my-provider <status|config>")
+
 
 def register_cli(subparser) -> None:
     """构建 hermes my-provider 的 argparse 树。

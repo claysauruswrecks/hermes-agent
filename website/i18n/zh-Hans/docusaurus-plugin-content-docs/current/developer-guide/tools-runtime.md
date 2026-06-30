@@ -28,15 +28,15 @@ Hermes 工具是自注册函数，按 toolset（工具集）分组，并通过�
 
 ```python
 registry.register(
-    name="terminal",               # 唯一工具名称（用于 API schema）
-    toolset="terminal",            # 该工具所属的 toolset
-    schema={...},                  # OpenAI function-calling schema（描述、参数）
-    handler=handle_terminal,       # 工具被调用时执行的函数
-    check_fn=check_terminal,       # 可选：返回 True/False 表示是否可用
-    requires_env=["SOME_VAR"],     # 可选：所需的环境变量（用于 UI 显示）
-    is_async=False,                # handler 是否为异步协程
-    description="Run commands",    # 人类可读的描述
-    emoji="💻",                    # 用于 spinner/进度显示的 emoji
+    name="terminal",  # 唯一工具名称（用于 API schema）
+    toolset="terminal",  # 该工具所属的 toolset
+    schema={...},  # OpenAI function-calling schema（描述、参数）
+    handler=handle_terminal,  # 工具被调用时执行的函数
+    check_fn=check_terminal,  # 可选：返回 True/False 表示是否可用
+    requires_env=["SOME_VAR"],  # 可选：所需的环境变量（用于 UI 显示）
+    is_async=False,  # handler 是否为异步协程
+    description="Run commands",  # 人类可读的描述
+    emoji="💻",  # 用于 spinner/进度显示的 emoji
 )
 ```
 
@@ -82,9 +82,9 @@ if entry.check_fn:
     try:
         available = bool(entry.check_fn())
     except Exception:
-        available = False   # 异常 = 不可用
+        available = False  # 异常 = 不可用
     if not available:
-        continue            # 完全跳过该工具
+        continue  # 完全跳过该工具
 ```
 
 关键行为：

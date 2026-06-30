@@ -75,11 +75,14 @@ kanban_heartbeat(note="schema drafted, writing migrations now")
 
 kanban_complete(
     summary="users(id, email, pw_hash), sessions(id, user_id, jti, expires_at); "
-            "refresh tokens stored as sessions with type='refresh'",
+    "refresh tokens stored as sessions with type='refresh'",
     metadata={
         "changed_files": ["migrations/001_users.sql", "migrations/002_sessions.sql"],
-        "decisions": ["bcrypt for hashing", "JWT for session tokens",
-                      "7-day refresh, 15-min access"],
+        "decisions": [
+            "bcrypt for hashing",
+            "JWT for session tokens",
+            "7-day refresh, 15-min access",
+        ],
     },
 )
 ```
@@ -158,23 +161,25 @@ dashboard 视图，按 `auth-project` 筛选：
 kanban_show()
 kanban_complete(
     summary="spec approved; POST /forgot-password sends email, "
-            "GET /reset/:token renders form, POST /reset applies new password",
-    metadata={"acceptance": [
-        "expired token returns 410",
-        "reused last-3 password returns 400 with message",
-        "successful reset invalidates all active sessions",
-    ]},
+    "GET /reset/:token renders form, POST /reset applies new password",
+    metadata={
+        "acceptance": [
+            "expired token returns 410",
+            "reused last-3 password returns 400 with message",
+            "successful reset invalidates all active sessions",
+        ]
+    },
 )
 # → $SPEC 完成；$IMPL 自动从 todo 提升为 ready
 
 # --- 工程师 worker 在 $IMPL 上生成（第一次尝试）---
 # worker tool calls
-kanban_show()   # 在 worker_context 中读取 $SPEC 的 summary 和 acceptance metadata
+kanban_show()  # 在 worker_context 中读取 $SPEC 的 summary 和 acceptance metadata
 # （工程师编写代码，运行测试，开启 PR）
 # 审查者反馈到来——工程师认为问题有效并阻塞任务
 kanban_block(
     reason="Review: password strength check missing, reset link isn't "
-           "single-use (can be replayed within 30min)",
+    "single-use (can be replayed within 30min)",
 )
 # → $IMPL 转换为 blocked；run 1 以 outcome='blocked' 关闭
 ```
@@ -197,7 +202,7 @@ kanban_show()
 # （工程师添加 zxcvbn 检查，使重置令牌变为一次性，重新运行测试）
 kanban_complete(
     summary="added zxcvbn strength check, reset tokens are now single-use "
-            "(stored + deleted on success)",
+    "(stored + deleted on success)",
     metadata={
         "changed_files": [
             "auth/reset.py",

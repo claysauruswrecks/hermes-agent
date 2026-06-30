@@ -145,7 +145,7 @@ import lambda_cloud_client
 # Configure with API key
 configuration = lambda_cloud_client.Configuration(
     host="https://cloud.lambdalabs.com/api/v1",
-    access_token=os.environ["LAMBDA_API_KEY"]
+    access_token=os.environ["LAMBDA_API_KEY"],
 )
 ```
 
@@ -171,7 +171,7 @@ request = LaunchInstanceRequest(
     instance_type_name="gpu_1x_h100_sxm5",
     ssh_key_names=["my-ssh-key"],
     file_system_names=["my-filesystem"],  # Optional
-    name="training-job"
+    name="training-job",
 )
 
 response = api.launch_instance(request)
@@ -192,9 +192,7 @@ for instance in instances.data:
 ```python
 from lambda_cloud_client.models import TerminateInstanceRequest
 
-request = TerminateInstanceRequest(
-    instance_ids=[instance_id]
-)
+request = TerminateInstanceRequest(instance_ids=[instance_id])
 api.terminate_instance(request)
 ```
 
@@ -204,10 +202,7 @@ api.terminate_instance(request)
 from lambda_cloud_client.models import AddSshKeyRequest
 
 # Add SSH key
-request = AddSshKeyRequest(
-    name="my-key",
-    public_key="ssh-rsa AAAA..."
-)
+request = AddSshKeyRequest(name="my-key", public_key="ssh-rsa AAAA...")
 api.add_ssh_key(request)
 
 # List keys
@@ -375,6 +370,7 @@ import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
+
 def main():
     dist.init_process_group("nccl")
     rank = dist.get_rank()
@@ -384,6 +380,7 @@ def main():
     model = DDP(model, device_ids=[device])
 
     # Training loop...
+
 
 if __name__ == "__main__":
     main()
@@ -403,12 +400,15 @@ checkpoint_dir = "/lambda/nfs/my-storage/checkpoints"
 os.makedirs(checkpoint_dir, exist_ok=True)
 
 # Save checkpoint
-torch.save({
-    'epoch': epoch,
-    'model_state_dict': model.state_dict(),
-    'optimizer_state_dict': optimizer.state_dict(),
-    'loss': loss,
-}, f"{checkpoint_dir}/checkpoint_{epoch}.pt")
+torch.save(
+    {
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "loss": loss,
+    },
+    f"{checkpoint_dir}/checkpoint_{epoch}.pt",
+)
 ```
 
 ## 1-Click Clusters

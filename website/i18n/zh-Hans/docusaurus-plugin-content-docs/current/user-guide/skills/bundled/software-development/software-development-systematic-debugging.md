@@ -362,7 +362,7 @@ delegate_task(
     文件：[故障代码路径]
     测试命令：[确切命令]
     """,
-    toolsets=['terminal', 'file']
+    toolsets=["terminal", "file"],
 )
 ```
 

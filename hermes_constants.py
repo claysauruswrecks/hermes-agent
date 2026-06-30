@@ -47,7 +47,9 @@ def _get_platform_default_hermes_home() -> Path:
     """Return the platform-native default Hermes home path."""
     if sys.platform == "win32":
         local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
-        base = Path(local_appdata) if local_appdata else Path.home() / "AppData" / "Local"
+        base = (
+            Path(local_appdata) if local_appdata else Path.home() / "AppData" / "Local"
+        )
         return base / "hermes"
     return Path.home() / ".hermes"
 
@@ -289,7 +291,9 @@ def _candidate_node_command_names(command: str) -> list[str]:
 
 _HERMES_NODE_TARGET_MAJOR = int(os.environ.get("HERMES_NODE_TARGET_MAJOR", "22"))
 _managed_node_heal_attempted = False
-_NODE_BOOTSTRAP_SCRIPT = Path(__file__).resolve().parent / "scripts" / "lib" / "node-bootstrap.sh"
+_NODE_BOOTSTRAP_SCRIPT = (
+    Path(__file__).resolve().parent / "scripts" / "lib" / "node-bootstrap.sh"
+)
 
 
 def node_tool_runnable(path: str | None) -> bool:
@@ -353,7 +357,10 @@ def _heal_managed_node_windows() -> bool:
     import urllib.request
     import zipfile
 
-    arch = (os.environ.get("PROCESSOR_ARCHITEW6432") or os.environ.get("PROCESSOR_ARCHITECTURE", "")).lower()
+    arch = (
+        os.environ.get("PROCESSOR_ARCHITEW6432")
+        or os.environ.get("PROCESSOR_ARCHITECTURE", "")
+    ).lower()
     if arch in ("amd64", "x86_64"):
         node_arch = "x64"
     elif arch == "arm64":
@@ -681,7 +688,11 @@ def _norm_home_path(path: str | None) -> str:
 
 def _profile_home_path(env: dict[str, str] | None = None) -> str | None:
     """Return ``{HERMES_HOME}/home`` when the profile-home directory exists."""
-    hermes_home = get_hermes_home_override() or (env or {}).get("HERMES_HOME") or os.getenv("HERMES_HOME")
+    hermes_home = (
+        get_hermes_home_override()
+        or (env or {}).get("HERMES_HOME")
+        or os.getenv("HERMES_HOME")
+    )
     if not hermes_home:
         return None
     profile_home = os.path.join(hermes_home, "home")
@@ -691,14 +702,20 @@ def _profile_home_path(env: dict[str, str] | None = None) -> str | None:
 
 
 def _is_profile_home(candidate: str | None, profile_home: str | None) -> bool:
-    return bool(candidate and profile_home and _norm_home_path(candidate) == _norm_home_path(profile_home))
+    return bool(
+        candidate
+        and profile_home
+        and _norm_home_path(candidate) == _norm_home_path(profile_home)
+    )
 
 
 def _iter_real_home_candidates(env: dict[str, str] | None = None) -> list[str]:
     """Return likely OS-user home candidates in trust order."""
     env = env or {}
     candidates: list[str] = []
-    explicit = str(env.get("HERMES_REAL_HOME") or os.getenv("HERMES_REAL_HOME", "")).strip()
+    explicit = str(
+        env.get("HERMES_REAL_HOME") or os.getenv("HERMES_REAL_HOME", "")
+    ).strip()
     if explicit:
         candidates.append(explicit)
     home = str(env.get("HOME") or os.getenv("HOME", "")).strip()
@@ -707,7 +724,9 @@ def _iter_real_home_candidates(env: dict[str, str] | None = None) -> list[str]:
     try:
         import pwd
 
-        pw_home = pwd.getpwuid(os.getuid()).pw_dir.strip()  # windows-footgun: ok — POSIX-only module inside try/except
+        pw_home = pwd.getpwuid(
+            os.getuid()
+        ).pw_dir.strip()  # windows-footgun: ok — POSIX-only module inside try/except
         if pw_home:
             candidates.append(pw_home)
     except Exception:
@@ -718,7 +737,11 @@ def _iter_real_home_candidates(env: dict[str, str] | None = None) -> list[str]:
     drive = str(env.get("HOMEDRIVE") or os.getenv("HOMEDRIVE", "")).strip()
     path = str(env.get("HOMEPATH") or os.getenv("HOMEPATH", "")).strip()
     if drive and path:
-        candidates.append(f"{drive}{path}" if path.startswith(("\\", "/")) else os.path.join(drive, path))
+        candidates.append(
+            f"{drive}{path}"
+            if path.startswith(("\\", "/"))
+            else os.path.join(drive, path)
+        )
     expanded = os.path.expanduser("~")
     if expanded and expanded != "~":
         candidates.append(expanded)
@@ -760,7 +783,12 @@ def get_subprocess_home(env: dict[str, str] | None = None) -> str | None:
     """
     env = env or {}
     profile_home = _profile_home_path(env)
-    mode = str(env.get("TERMINAL_HOME_MODE") or os.getenv("TERMINAL_HOME_MODE", "auto")).strip().lower() or "auto"
+    mode = (
+        str(env.get("TERMINAL_HOME_MODE") or os.getenv("TERMINAL_HOME_MODE", "auto"))
+        .strip()
+        .lower()
+        or "auto"
+    )
     if mode in {"isolated", "profile_home", "profile-home"}:
         mode = "profile"
     if mode in {"host", "user", "real_home", "real-home"}:
@@ -772,12 +800,20 @@ def get_subprocess_home(env: dict[str, str] | None = None) -> str | None:
     real_home = get_real_home(env)
     current_home = str(env.get("HOME") or os.getenv("HOME", "")).strip()
     if mode == "real":
-        return real_home if _norm_home_path(real_home) != _norm_home_path(current_home) else None
+        return (
+            real_home
+            if _norm_home_path(real_home) != _norm_home_path(current_home)
+            else None
+        )
 
     if profile_home and is_container():
         return profile_home
     if _is_profile_home(current_home, profile_home):
-        return real_home if _norm_home_path(real_home) != _norm_home_path(current_home) else None
+        return (
+            real_home
+            if _norm_home_path(real_home) != _norm_home_path(current_home)
+            else None
+        )
     return None
 
 
@@ -891,7 +927,9 @@ def is_container() -> bool:
     try:
         with open("/proc/self/mountinfo", "r", encoding="utf-8") as f:
             mountinfo = f.read()
-            if any(marker in mountinfo for marker in ("kubepods", "containerd", "crio")):
+            if any(
+                marker in mountinfo for marker in ("kubepods", "containerd", "crio")
+            ):
                 _container_detected = True
                 return True
     except OSError:
@@ -915,7 +953,6 @@ def get_config_path() -> Path:
 def get_skills_dir() -> Path:
     """Return the path to the skills directory under HERMES_HOME."""
     return get_hermes_home() / "skills"
-
 
 
 def get_env_path() -> Path:

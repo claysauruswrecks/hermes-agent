@@ -323,7 +323,9 @@ class TestSetupTelegramAuto:
 
         assert callable(_setup_telegram_auto)
 
-    def test_setup_result_passes_profile_name_for_profile_home(self, monkeypatch, tmp_path):
+    def test_setup_result_passes_profile_name_for_profile_home(
+        self, monkeypatch, tmp_path
+    ):
         from hermes_cli import setup
 
         seen = {}

@@ -205,6 +205,7 @@ prompts = [
     "How does garbage collection work?",
 ]
 
+
 def process_prompt(prompt):
     # Create a fresh agent per task for thread safety
     agent = AIAgent(
@@ -213,6 +214,7 @@ def process_prompt(prompt):
         skip_memory=True,
     )
     return agent.chat(prompt)
+
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
     results = list(executor.map(process_prompt, prompts))
@@ -238,9 +240,11 @@ from run_agent import AIAgent
 
 app = FastAPI()
 
+
 class ChatRequest(BaseModel):
     message: str
     model: str = "anthropic/claude-sonnet-4"
+
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
@@ -262,6 +266,7 @@ from run_agent import AIAgent
 
 client = discord.Client(intents=discord.Intents.default())
 
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -278,6 +283,7 @@ async def on_message(message):
         response = agent.chat(query)
         await message.channel.send(response[:2000])
 
+
 client.run("YOUR_DISCORD_TOKEN")
 ```
 
@@ -286,6 +292,7 @@ client.run("YOUR_DISCORD_TOKEN")
 ```python
 #!/usr/bin/env python3
 """CI step: auto-review a PR diff."""
+
 import subprocess
 from run_agent import AIAgent
 

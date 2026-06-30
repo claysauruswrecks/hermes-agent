@@ -183,6 +183,7 @@ Trajectories are standard JSONL — load with any JSON-lines reader:
 ```python
 import json
 
+
 def load_trajectories(path: str):
     """Load trajectory entries from a JSONL file."""
     entries = []
@@ -193,9 +194,11 @@ def load_trajectories(path: str):
                 entries.append(json.loads(line))
     return entries
 
+
 # Filter to successful completions only
-successful = [e for e in load_trajectories("trajectory_samples.jsonl")
-              if e.get("completed")]
+successful = [
+    e for e in load_trajectories("trajectory_samples.jsonl") if e.get("completed")
+]
 
 # Extract just the conversations for training
 training_data = [e["conversations"] for e in successful]

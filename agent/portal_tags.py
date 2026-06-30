@@ -42,6 +42,7 @@ def _hermes_version() -> str:
     """
     try:
         from hermes_cli import __version__
+
         return __version__
     except Exception:
         return "unknown"

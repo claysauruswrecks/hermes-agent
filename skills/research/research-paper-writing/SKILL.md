@@ -185,7 +185,10 @@ from datetime import datetime
 
 COST_LOG = "results/cost_log.jsonl"
 
-def log_cost(experiment: str, model: str, input_tokens: int, output_tokens: int, cost_usd: float):
+
+def log_cost(
+    experiment: str, model: str, input_tokens: int, output_tokens: int, cost_usd: float
+):
     entry = {
         "timestamp": datetime.now().isoformat(),
         "experiment": experiment,
@@ -325,10 +328,10 @@ If ANY step fails → mark as [CITATION NEEDED], inform scientist
 # Fetch BibTeX via DOI
 import requests
 
+
 def doi_to_bibtex(doi: str) -> str:
     response = requests.get(
-        f"https://doi.org/{doi}",
-        headers={"Accept": "application/x-bibtex"}
+        f"https://doi.org/{doi}", headers={"Accept": "application/x-bibtex"}
     )
     response.raise_for_status()
     return response.text
@@ -398,7 +401,7 @@ result_path = f"results/{task}/{strategy}/result.json"
 if os.path.exists(result_path):
     continue  # Skip already-completed work
 # ... run experiment ...
-with open(result_path, 'w') as f:
+with open(result_path, "w") as f:
     json.dump(result, f, indent=2)
 ```
 
@@ -1512,14 +1515,14 @@ import matplotlib.pyplot as plt
 import scienceplots  # registers styles
 
 # Use science style (IEEE-like, clean)
-with plt.style.context(['science', 'no-latex']):
+with plt.style.context(["science", "no-latex"]):
     fig, ax = plt.subplots(figsize=(3.5, 2.5))  # Single-column width
-    ax.plot(x, y, label='Ours', color='#0072B2')
-    ax.plot(x, y2, label='Baseline', color='#D55E00', linestyle='--')
-    ax.set_xlabel('Training Steps')
-    ax.set_ylabel('Accuracy')
+    ax.plot(x, y, label="Ours", color="#0072B2")
+    ax.plot(x, y2, label="Baseline", color="#D55E00", linestyle="--")
+    ax.set_xlabel("Training Steps")
+    ax.set_ylabel("Accuracy")
     ax.legend()
-    fig.savefig('paper/fig_results.pdf', bbox_inches='tight')
+    fig.savefig("paper/fig_results.pdf", bbox_inches="tight")
 
 # Available styles: 'science', 'ieee', 'nature', 'science+ieee'
 # Add 'no-latex' if LaTeX is not installed on the machine generating plots
@@ -2186,10 +2189,11 @@ import requests
 sch = SemanticScholar()
 results = sch.search_paper("attention mechanism transformers", limit=5)
 for paper in results:
-    doi = paper.externalIds.get('DOI', 'N/A')
-    if doi != 'N/A':
-        bibtex = requests.get(f"https://doi.org/{doi}", 
-                              headers={"Accept": "application/x-bibtex"}).text
+    doi = paper.externalIds.get("DOI", "N/A")
+    if doi != "N/A":
+        bibtex = requests.get(
+            f"https://doi.org/{doi}", headers={"Accept": "application/x-bibtex"}
+        ).text
         print(bibtex)
 ```
 

@@ -1006,18 +1006,22 @@ its name appears in a toolset.
 import json, os
 from tools.registry import registry
 
+
 def check_requirements() -> bool:
     return bool(os.getenv("EXAMPLE_API_KEY"))
 
+
 def example_tool(param: str, task_id: str = None) -> str:
     return json.dumps({"success": True, "data": "..."})
+
 
 registry.register(
     name="example_tool",
     toolset="example",
     schema={"name": "example_tool", "description": "...", "parameters": {...}},
     handler=lambda args, **kw: example_tool(
-        param=args.get("param", ""), task_id=kw.get("task_id")),
+        param=args.get("param", ""), task_id=kw.get("task_id")
+    ),
     check_fn=check_requirements,
     requires_env=["EXAMPLE_API_KEY"],
 )

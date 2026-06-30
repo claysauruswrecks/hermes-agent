@@ -132,10 +132,11 @@ skills/<category>/<skill-name>/SKILL.md
 4. **本地验证**：
    ```python
    import yaml, re, pathlib
+
    content = pathlib.Path("skills/<category>/<name>/SKILL.md").read_text()
    assert content.startswith("---")
-   m = re.search(r'\n---\s*\n', content[3:])
-   fm = yaml.safe_load(content[3:m.start()+3])
+   m = re.search(r"\n---\s*\n", content[3:])
+   fm = yaml.safe_load(content[3 : m.start() + 3])
    assert "name" in fm and "description" in fm
    assert len(fm["description"]) <= 1024
    assert len(content) <= 100_000

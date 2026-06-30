@@ -41,8 +41,8 @@ plugins/context_engine/lcm/
 ```python
 from agent.context_engine import ContextEngine
 
-class LCMEngine(ContextEngine):
 
+class LCMEngine(ContextEngine):
     @property
     def name(self) -> str:
         """短标识符，例如 'lcm'。必须与 config.yaml 中的值匹配。"""
@@ -58,8 +58,9 @@ class LCMEngine(ContextEngine):
     def should_compress(self, prompt_tokens: int = None) -> bool:
         """若本轮应触发压缩则返回 True。"""
 
-    def compress(self, messages: list, current_tokens: int = None,
-                 focus_topic: str = None) -> list:
+    def compress(
+        self, messages: list, current_tokens: int = None, focus_topic: str = None
+    ) -> list:
         """压缩消息列表并返回新的（可能更短的）列表。
 
         返回的列表必须是有效的 OpenAI 格式消息序列。
@@ -77,9 +78,9 @@ Agent 直接读取这些属性用于显示和日志记录：
 last_prompt_tokens: int = 0
 last_completion_tokens: int = 0
 last_total_tokens: int = 0
-threshold_tokens: int = 0        # 触发压缩的阈值
-context_length: int = 0          # 模型的完整上下文窗口
-compression_count: int = 0       # compress() 已运行的次数
+threshold_tokens: int = 0  # 触发压缩的阈值
+context_length: int = 0  # 模型的完整上下文窗口
+compression_count: int = 0  # compress() 已运行的次数
 ```
 
 ### 可选方法
@@ -103,17 +104,20 @@ Context engine 可以暴露 agent 直接调用的工具。从 `get_tool_schemas(
 
 ```python
 def get_tool_schemas(self):
-    return [{
-        "name": "lcm_grep",
-        "description": "Search the context knowledge graph",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "Search query"}
+    return [
+        {
+            "name": "lcm_grep",
+            "description": "Search the context knowledge graph",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"}
+                },
+                "required": ["query"],
             },
-            "required": ["query"],
-        },
-    }]
+        }
+    ]
+
 
 def handle_tool_call(self, name, args, **kwargs):
     if name == "lcm_grep":
@@ -171,10 +175,12 @@ context:
 ```python
 from agent.context_engine import ContextEngine
 
+
 def test_engine_satisfies_abc():
     engine = YourEngine(context_length=200000)
     assert isinstance(engine, ContextEngine)
     assert engine.name == "your-name"
+
 
 def test_compress_returns_valid_messages():
     engine = YourEngine(context_length=200000)

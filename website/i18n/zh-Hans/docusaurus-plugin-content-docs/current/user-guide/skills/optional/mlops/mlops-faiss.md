@@ -74,15 +74,15 @@ import numpy as np
 # 创建示例数据（1000 个向量，128 维）
 d = 128
 nb = 1000
-vectors = np.random.random((nb, d)).astype('float32')
+vectors = np.random.random((nb, d)).astype("float32")
 
 # 创建索引
 index = faiss.IndexFlatL2(d)  # L2 距离
-index.add(vectors)             # 添加向量
+index.add(vectors)  # 添加向量
 
 # 搜索
 k = 5  # 查找 5 个最近邻
-query = np.random.random((1, d)).astype('float32')
+query = np.random.random((1, d)).astype("float32")
 distances, indices = index.search(query, k)
 
 print(f"Nearest neighbors: {indices}")
@@ -142,7 +142,7 @@ distances, indices = index.search(query, k)
 
 ```python
 # PQ 可将内存减少 16-32 倍
-m = 8   # 子量化器数量
+m = 8  # 子量化器数量
 nbits = 8
 index = faiss.IndexPQ(d, m, nbits)
 
@@ -192,9 +192,7 @@ vectorstore.save_local("faiss_index")
 
 # 加载
 vectorstore = FAISS.load_local(
-    "faiss_index",
-    OpenAIEmbeddings(),
-    allow_dangerous_deserialization=True
+    "faiss_index", OpenAIEmbeddings(), allow_dangerous_deserialization=True
 )
 
 # 搜索

@@ -11,6 +11,7 @@ def _hermes_home_path() -> Path:
     """Resolve the active HERMES_HOME (profile-aware) without circular imports."""
     try:
         from hermes_constants import get_hermes_home  # local import to avoid cycles
+
         return get_hermes_home()
     except Exception:
         return Path(os.path.expanduser("~/.hermes"))
@@ -19,7 +20,10 @@ def _hermes_home_path() -> Path:
 def _hermes_root_path() -> Path:
     """Resolve the Hermes root dir (always the parent of any profile, never per-profile)."""
     try:
-        from hermes_constants import get_default_hermes_root  # local import to avoid cycles
+        from hermes_constants import (
+            get_default_hermes_root,
+        )  # local import to avoid cycles
+
         return get_default_hermes_root()
     except Exception:
         return Path(os.path.expanduser("~/.hermes"))
@@ -397,9 +401,7 @@ def classify_cross_profile_target(path: str) -> Optional[dict]:
         target_profile = "default"
         area = parts[0]
     elif (
-        parts[0] == "profiles"
-        and len(parts) >= 3
-        and parts[2] in PROFILE_SCOPED_AREAS
+        parts[0] == "profiles" and len(parts) >= 3 and parts[2] in PROFILE_SCOPED_AREAS
     ):
         # ``<root>/profiles/<name>/<area>/...`` → named profile.
         target_profile = parts[1]
@@ -518,7 +520,9 @@ def classify_sandbox_mirror_target(path: str) -> Optional[dict]:
         return None
 
     mirror_root = str(Path(*parts[: inner_idx + 1]))
-    inner_path = str(Path(*parts[inner_idx + 1 :])) if inner_idx + 1 < len(parts) else ""
+    inner_path = (
+        str(Path(*parts[inner_idx + 1 :])) if inner_idx + 1 < len(parts) else ""
+    )
 
     return {
         "target_path": str(target),

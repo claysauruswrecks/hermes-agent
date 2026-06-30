@@ -151,6 +151,7 @@ pixel_art("in.png", "out.png", preset="snes", palette="PICO_8", block=6)
 
 ```python
 import sys
+
 sys.path.insert(0, "/home/teknium/.hermes/skills/creative/pixel-art/scripts")
 from pixel_art import pixel_art
 from pixel_art_video import pixel_art_video

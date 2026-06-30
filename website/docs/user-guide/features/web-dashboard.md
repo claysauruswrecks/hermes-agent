@@ -949,6 +949,7 @@ To plug a non-Nous OAuth provider (e.g. Google, GitHub, custom OIDC), create a p
 # ~/.hermes/plugins/dashboard-auth-myidp/__init__.py
 from hermes_cli.dashboard_auth import DashboardAuthProvider, Session, LoginStart
 
+
 class MyIdPProvider(DashboardAuthProvider):
     name = "myidp"
     display_name = "My Identity Provider"
@@ -958,6 +959,7 @@ class MyIdPProvider(DashboardAuthProvider):
     def verify_session(self, *, access_token): ...
     def refresh_session(self, *, refresh_token): ...
     def revoke_session(self, *, refresh_token): ...
+
 
 def register(ctx):
     ctx.register_dashboard_auth_provider(MyIdPProvider())

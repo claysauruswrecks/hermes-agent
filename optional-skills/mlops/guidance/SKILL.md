@@ -124,7 +124,7 @@ lm += "Date: " + gen("date", regex=r"\d{4}-\d{2}-\d{2}")
 lm += "Phone: " + gen("phone", regex=r"\d{3}-\d{3}-\d{4}")
 
 print(lm["email"])  # Guaranteed valid email
-print(lm["date"])   # Guaranteed YYYY-MM-DD format
+print(lm["date"])  # Guaranteed YYYY-MM-DD format
 ```
 
 **How it works:**
@@ -144,12 +144,11 @@ lm += "Sentiment: " + select(["positive", "negative", "neutral"], name="sentimen
 
 # Multiple-choice selection
 lm += "Best answer: " + select(
-    ["A) Paris", "B) London", "C) Berlin", "D) Madrid"],
-    name="answer"
+    ["A) Paris", "B) London", "C) Berlin", "D) Madrid"], name="answer"
 )
 
 print(lm["sentiment"])  # One of: positive, negative, neutral
-print(lm["answer"])     # One of: A, B, C, or D
+print(lm["answer"])  # One of: A, B, C, or D
 ```
 
 ### 3. Token Healing
@@ -220,12 +219,14 @@ Create reusable generation patterns with the `@guidance` decorator.
 ```python
 from guidance import guidance, gen, models
 
+
 @guidance
 def generate_person(lm):
     """Generate a person with name and age."""
     lm += "Name: " + gen("name", max_tokens=20, stop="\n")
     lm += "\nAge: " + gen("age", regex=r"[0-9]+", max_tokens=3)
     return lm
+
 
 # Use the function
 lm = models.Anthropic("claude-sonnet-4-5-20250929")
@@ -245,7 +246,7 @@ def react_agent(lm, question, tools, max_rounds=5):
 
     for i in range(max_rounds):
         # Thought
-        lm += f"Thought {i+1}: " + gen("thought", stop="\n")
+        lm += f"Thought {i + 1}: " + gen("thought", stop="\n")
 
         # Action
         lm += "\nAction: " + select(list(tools.keys()), name="action")
@@ -273,7 +274,7 @@ from guidance import models
 
 lm = models.Anthropic(
     model="claude-sonnet-4-5-20250929",
-    api_key="your-api-key"  # Or set ANTHROPIC_API_KEY env var
+    api_key="your-api-key",  # Or set ANTHROPIC_API_KEY env var
 )
 ```
 
@@ -282,7 +283,7 @@ lm = models.Anthropic(
 ```python
 lm = models.OpenAI(
     model="gpt-4o-mini",
-    api_key="your-api-key"  # Or set OPENAI_API_KEY env var
+    api_key="your-api-key",  # Or set OPENAI_API_KEY env var
 )
 ```
 
@@ -293,7 +294,7 @@ from guidance.models import Transformers
 
 lm = Transformers(
     "microsoft/Phi-4-mini-instruct",
-    device="cuda"  # Or "cpu"
+    device="cuda",  # Or "cpu"
 )
 ```
 
@@ -302,11 +303,7 @@ lm = Transformers(
 ```python
 from guidance.models import LlamaCpp
 
-lm = LlamaCpp(
-    model_path="/path/to/model.gguf",
-    n_ctx=4096,
-    n_gpu_layers=35
-)
+lm = LlamaCpp(model_path="/path/to/model.gguf", n_ctx=4096, n_gpu_layers=35)
 ```
 
 ## Common Patterns
@@ -325,11 +322,23 @@ with user():
     lm += "Generate a user profile with name, age, and email."
 
 with assistant():
-    lm += """{
-    "name": """ + gen("name", regex=r'"[A-Za-z ]+"', max_tokens=30) + """,
-    "age": """ + gen("age", regex=r"[0-9]+", max_tokens=3) + """,
-    "email": """ + gen("email", regex=r'"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"', max_tokens=50) + """
+    lm += (
+        """{
+    "name": """
+        + gen("name", regex=r'"[A-Za-z ]+"', max_tokens=30)
+        + """,
+    "age": """
+        + gen("age", regex=r"[0-9]+", max_tokens=3)
+        + """,
+    "email": """
+        + gen(
+            "email",
+            regex=r'"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"',
+            max_tokens=50,
+        )
+        + """
 }"""
+    )
 
 print(lm)  # Valid JSON guaranteed
 ```
@@ -356,6 +365,7 @@ print(f"Confidence: {lm['confidence']}%")
 ```python
 from guidance import models, gen, guidance
 
+
 @guidance
 def chain_of_thought(lm, question):
     """Generate answer with step-by-step reasoning."""
@@ -363,12 +373,13 @@ def chain_of_thought(lm, question):
 
     # Generate multiple reasoning steps
     for i in range(3):
-        lm += f"Step {i+1}: " + gen(f"step_{i+1}", stop="\n", max_tokens=100) + "\n"
+        lm += f"Step {i + 1}: " + gen(f"step_{i + 1}", stop="\n", max_tokens=100) + "\n"
 
     # Final answer
     lm += "\nTherefore, the answer is: " + gen("answer", max_tokens=50)
 
     return lm
+
 
 lm = models.Anthropic("claude-sonnet-4-5-20250929")
 lm = chain_of_thought(lm, "What is 15% of 200?")
@@ -380,6 +391,7 @@ print(lm["answer"])
 
 ```python
 from guidance import models, gen, select, guidance
+
 
 @guidance(stateless=False)
 def react_agent(lm, question):
@@ -412,6 +424,7 @@ def react_agent(lm, question):
 
     return lm
 
+
 lm = models.Anthropic("claude-sonnet-4-5-20250929")
 lm = react_agent(lm, "What is 25 * 4 + 10?")
 print(lm["answer"])
@@ -421,6 +434,7 @@ print(lm["answer"])
 
 ```python
 from guidance import models, gen, guidance
+
 
 @guidance
 def extract_entities(lm, text):
@@ -440,6 +454,7 @@ def extract_entities(lm, text):
     lm += "Location: " + gen("location", stop="\n", max_tokens=30) + "\n"
 
     return lm
+
 
 text = "Tim Cook announced at Apple Park on 2024-09-15 in Cupertino."
 
@@ -501,6 +516,7 @@ def generate_person(lm):
     lm += "Name: " + gen("name", stop="\n")
     lm += "\nAge: " + gen("age", regex=r"[0-9]+")
     return lm
+
 
 # Use multiple times
 lm = generate_person(lm)

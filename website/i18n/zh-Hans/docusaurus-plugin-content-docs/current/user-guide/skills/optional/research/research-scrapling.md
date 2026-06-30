@@ -126,8 +126,8 @@ scrapling extract post 'https://example.com/api' output.json \
 ```python
 from scrapling.fetchers import Fetcher
 
-page = Fetcher.get('https://quotes.toscrape.com/')
-quotes = page.css('.quote .text::text').getall()
+page = Fetcher.get("https://quotes.toscrape.com/")
+quotes = page.css(".quote .text::text").getall()
 for q in quotes:
     print(q)
 ```
@@ -137,26 +137,26 @@ for q in quotes:
 ```python
 from scrapling.fetchers import FetcherSession
 
-with FetcherSession(impersonate='chrome') as session:
-    page = session.get('https://example.com/', stealthy_headers=True)
-    links = page.css('a::attr(href)').getall()
+with FetcherSession(impersonate="chrome") as session:
+    page = session.get("https://example.com/", stealthy_headers=True)
+    links = page.css("a::attr(href)").getall()
     for link in links[:5]:
         sub = session.get(link)
-        print(sub.css('h1::text').get())
+        print(sub.css("h1::text").get())
 ```
 
 ### POST / PUT / DELETE
 
 ```python
-page = Fetcher.post('https://api.example.com/data', json={"key": "value"})
-page = Fetcher.put('https://api.example.com/item/1', data={"name": "updated"})
-page = Fetcher.delete('https://api.example.com/item/1')
+page = Fetcher.post("https://api.example.com/data", json={"key": "value"})
+page = Fetcher.put("https://api.example.com/item/1", data={"name": "updated"})
+page = Fetcher.delete("https://api.example.com/item/1")
 ```
 
 ### 使用代理
 
 ```python
-page = Fetcher.get('https://example.com', proxy='http://user:pass@proxy:8080')
+page = Fetcher.get("https://example.com", proxy="http://user:pass@proxy:8080")
 ```
 
 ## Python：动态页面（JS 渲染）
@@ -166,16 +166,16 @@ page = Fetcher.get('https://example.com', proxy='http://user:pass@proxy:8080')
 ```python
 from scrapling.fetchers import DynamicFetcher
 
-page = DynamicFetcher.fetch('https://example.com', headless=True)
-data = page.css('.js-loaded-content::text').getall()
+page = DynamicFetcher.fetch("https://example.com", headless=True)
+data = page.css(".js-loaded-content::text").getall()
 ```
 
 ### 等待特定元素
 
 ```python
 page = DynamicFetcher.fetch(
-    'https://example.com',
-    wait_selector=('.results', 'visible'),
+    "https://example.com",
+    wait_selector=(".results", "visible"),
     network_idle=True,
 )
 ```
@@ -187,9 +187,11 @@ page = DynamicFetcher.fetch(
 ```python
 from scrapling.fetchers import DynamicSession
 
-with DynamicSession(headless=True, disable_resources=True, network_idle=True) as session:
-    page = session.fetch('https://example.com')
-    items = page.css('.item::text').getall()
+with DynamicSession(
+    headless=True, disable_resources=True, network_idle=True
+) as session:
+    page = session.fetch("https://example.com")
+    items = page.css(".item::text").getall()
 ```
 
 ### 自定义页面自动化
@@ -198,14 +200,16 @@ with DynamicSession(headless=True, disable_resources=True, network_idle=True) as
 from playwright.sync_api import Page
 from scrapling.fetchers import DynamicFetcher
 
+
 def scroll_and_click(page: Page):
     page.mouse.wheel(0, 3000)
     page.wait_for_timeout(1000)
-    page.click('button.load-more')
-    page.wait_for_selector('.extra-results')
+    page.click("button.load-more")
+    page.wait_for_selector(".extra-results")
 
-page = DynamicFetcher.fetch('https://example.com', page_action=scroll_and_click)
-results = page.css('.extra-results .item::text').getall()
+
+page = DynamicFetcher.fetch("https://example.com", page_action=scroll_and_click)
+results = page.css(".extra-results .item::text").getall()
 ```
 
 ## Python：隐身模式（反机器人绕过）
@@ -216,13 +220,13 @@ results = page.css('.extra-results .item::text').getall()
 from scrapling.fetchers import StealthyFetcher
 
 page = StealthyFetcher.fetch(
-    'https://protected-site.com',
+    "https://protected-site.com",
     headless=True,
     solve_cloudflare=True,
     block_webrtc=True,
     hide_canvas=True,
 )
-content = page.css('.protected-content::text').getall()
+content = page.css(".protected-content::text").getall()
 ```
 
 ### 隐身 Session
@@ -231,8 +235,8 @@ content = page.css('.protected-content::text').getall()
 from scrapling.fetchers import StealthySession
 
 with StealthySession(headless=True, solve_cloudflare=True) as session:
-    page1 = session.fetch('https://protected-site.com/page1')
-    page2 = session.fetch('https://protected-site.com/page2')
+    page1 = session.fetch("https://protected-site.com/page1")
+    page2 = session.fetch("https://protected-site.com/page2")
 ```
 
 ## 元素选择
@@ -242,24 +246,24 @@ with StealthySession(headless=True, solve_cloudflare=True) as session:
 ### CSS 选择器
 
 ```python
-page.css('h1::text').get()              # 第一个 h1 文本
-page.css('a::attr(href)').getall()      # 所有链接 href
-page.css('.quote .text::text').getall() # 嵌套选择
+page.css("h1::text").get()  # 第一个 h1 文本
+page.css("a::attr(href)").getall()  # 所有链接 href
+page.css(".quote .text::text").getall()  # 嵌套选择
 ```
 
 ### XPath
 
 ```python
 page.xpath('//div[@class="content"]/text()').getall()
-page.xpath('//a/@href').getall()
+page.xpath("//a/@href").getall()
 ```
 
 ### Find 方法
 
 ```python
-page.find_all('div', class_='quote')       # 按标签 + 属性查找
-page.find_by_text('Read more', tag='a')    # 按文本内容查找
-page.find_by_regex(r'\$\d+\.\d{2}')       # 按正则表达式查找
+page.find_all("div", class_="quote")  # 按标签 + 属性查找
+page.find_by_text("Read more", tag="a")  # 按文本内容查找
+page.find_by_regex(r"\$\d+\.\d{2}")  # 按正则表达式查找
 ```
 
 ### 相似元素
@@ -267,18 +271,18 @@ page.find_by_regex(r'\$\d+\.\d{2}')       # 按正则表达式查找
 查找具有相似结构的元素（适用于商品列表等）：
 
 ```python
-first_product = page.css('.product')[0]
+first_product = page.css(".product")[0]
 all_similar = first_product.find_similar()
 ```
 
 ### 导航
 
 ```python
-el = page.css('.target')[0]
-el.parent                # 父元素
-el.children              # 子元素
-el.next_sibling          # 下一个兄弟元素
-el.prev_sibling          # 上一个兄弟元素
+el = page.css(".target")[0]
+el.parent  # 父元素
+el.children  # 子元素
+el.next_sibling  # 下一个兄弟元素
+el.prev_sibling  # 上一个兄弟元素
 ```
 
 ## Python：爬虫框架
@@ -288,6 +292,7 @@ el.prev_sibling          # 上一个兄弟元素
 ```python
 from scrapling.spiders import Spider, Request, Response
 
+
 class QuotesSpider(Spider):
     name = "quotes"
     start_urls = ["https://quotes.toscrape.com/"]
@@ -295,16 +300,17 @@ class QuotesSpider(Spider):
     download_delay = 1
 
     async def parse(self, response: Response):
-        for quote in response.css('.quote'):
+        for quote in response.css(".quote"):
             yield {
-                "text": quote.css('.text::text').get(),
-                "author": quote.css('.author::text').get(),
-                "tags": quote.css('.tag::text').getall(),
+                "text": quote.css(".text::text").get(),
+                "author": quote.css(".author::text").get(),
+                "tags": quote.css(".tag::text").getall(),
             }
 
-        next_page = response.css('.next a::attr(href)').get()
+        next_page = response.css(".next a::attr(href)").get()
         if next_page:
             yield response.follow(next_page)
+
 
 result = QuotesSpider().start()
 print(f"Scraped {len(result.items)} quotes")
@@ -318,6 +324,7 @@ result.items.to_json("quotes.json")
 ```python
 from scrapling.fetchers import FetcherSession, AsyncStealthySession
 
+
 class SmartSpider(Spider):
     name = "smart"
     start_urls = ["https://example.com/"]
@@ -327,7 +334,7 @@ class SmartSpider(Spider):
         manager.add("stealth", AsyncStealthySession(headless=True), lazy=True)
 
     async def parse(self, response: Response):
-        for link in response.css('a::attr(href)').getall():
+        for link in response.css("a::attr(href)").getall():
             if "protected" in link:
                 yield Request(link, sid="stealth")
             else:

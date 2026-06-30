@@ -53,6 +53,7 @@ from pathlib import Path
 
 LOG_FILE = Path.home() / ".hermes" / "hooks" / "my-hook" / "activity.log"
 
+
 async def handle(event_type: str, context: dict):
     """Called for each subscribed event. Must be named 'handle'."""
     entry = {
@@ -110,6 +111,7 @@ THRESHOLD = 10
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_HOME_CHANNEL")
 
+
 async def handle(event_type: str, context: dict):
     iteration = context.get("iteration", 0)
     if iteration == THRESHOLD and BOT_TOKEN and CHAT_ID:
@@ -141,6 +143,7 @@ from datetime import datetime
 from pathlib import Path
 
 LOG = Path.home() / ".hermes" / "logs" / "command_usage.jsonl"
+
 
 def handle(event_type: str, context: dict):
     LOG.parent.mkdir(parents=True, exist_ok=True)
@@ -174,12 +177,17 @@ import httpx
 
 WEBHOOK_URL = "https://your-service.example.com/hermes-events"
 
+
 async def handle(event_type: str, context: dict):
     async with httpx.AsyncClient() as client:
-        await client.post(WEBHOOK_URL, json={
-            "event": event_type,
-            **context,
-        }, timeout=5)
+        await client.post(
+            WEBHOOK_URL,
+            json={
+                "event": event_type,
+                **context,
+            },
+            timeout=5,
+        )
 ```
 
 ### 教程：BOOT.md——每次 Gateway 启动时运行启动检查清单
@@ -427,9 +435,15 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 def audit_tool_call(tool_name, args, task_id, **kwargs):
-    logger.info("TOOL_CALL session=%s tool=%s args=%s",
-                task_id, tool_name, json.dumps(args)[:200])
+    logger.info(
+        "TOOL_CALL session=%s tool=%s args=%s",
+        task_id,
+        tool_name,
+        json.dumps(args)[:200],
+    )
+
 
 def register(ctx):
     ctx.register_hook("pre_tool_call", audit_tool_call)
@@ -440,9 +454,11 @@ def register(ctx):
 ```python
 DANGEROUS = {"terminal", "write_file", "patch"}
 
+
 def warn_dangerous(tool_name, **kwargs):
     if tool_name in DANGEROUS:
         print(f"⚠ Executing potentially dangerous tool: {tool_name}")
+
 
 def register(ctx):
     ctx.register_hook("pre_tool_call", warn_dangerous)
@@ -485,6 +501,7 @@ _tool_counts = Counter()
 _error_counts = Counter()
 _latency_ms = defaultdict(list)
 
+
 def track_metrics(tool_name, result, duration_ms=0, **kwargs):
     _tool_counts[tool_name] += 1
     _latency_ms[tool_name].append(duration_ms)
@@ -494,6 +511,7 @@ def track_metrics(tool_name, result, duration_ms=0, **kwargs):
             _error_counts[tool_name] += 1
     except (json.JSONDecodeError, TypeError):
         pass
+
 
 def register(ctx):
     ctx.register_hook("post_tool_call", track_metrics)
@@ -551,12 +569,17 @@ import httpx
 
 MEMORY_API = "https://your-memory-api.example.com"
 
+
 def recall(session_id, user_message, is_first_turn, **kwargs):
     try:
-        resp = httpx.post(f"{MEMORY_API}/recall", json={
-            "session_id": session_id,
-            "query": user_message,
-        }, timeout=3)
+        resp = httpx.post(
+            f"{MEMORY_API}/recall",
+            json={
+                "session_id": session_id,
+                "query": user_message,
+            },
+            timeout=3,
+        )
         memories = resp.json().get("results", [])
         if not memories:
             return None
@@ -564,6 +587,7 @@ def recall(session_id, user_message, is_first_turn, **kwargs):
         return {"context": text}
     except Exception:
         return None
+
 
 def register(ctx):
     ctx.register_hook("pre_llm_call", recall)
@@ -574,8 +598,10 @@ def register(ctx):
 ```python
 POLICY = "Never execute commands that delete files without explicit user confirmation."
 
+
 def guardrails(**kwargs):
     return {"context": POLICY}
+
 
 def register(ctx):
     ctx.register_hook("pre_llm_call", guardrails)
@@ -616,15 +642,21 @@ import httpx
 
 MEMORY_API = "https://your-memory-api.example.com"
 
+
 def sync_memory(session_id, user_message, assistant_response, **kwargs):
     try:
-        httpx.post(f"{MEMORY_API}/store", json={
-            "session_id": session_id,
-            "user": user_message,
-            "assistant": assistant_response,
-        }, timeout=5)
+        httpx.post(
+            f"{MEMORY_API}/store",
+            json={
+                "session_id": session_id,
+                "user": user_message,
+                "assistant": assistant_response,
+            },
+            timeout=5,
+        )
     except Exception:
         pass  # best-effort
+
 
 def register(ctx):
     ctx.register_hook("post_llm_call", sync_memory)
@@ -634,11 +666,18 @@ def register(ctx):
 
 ```python
 import logging
+
 logger = logging.getLogger(__name__)
 
+
 def log_response_length(session_id, assistant_response, model, **kwargs):
-    logger.info("RESPONSE session=%s model=%s chars=%d",
-                session_id, model, len(assistant_response or ""))
+    logger.info(
+        "RESPONSE session=%s model=%s chars=%d",
+        session_id,
+        model,
+        len(assistant_response or ""),
+    )
+
 
 def register(ctx):
     ctx.register_hook("post_llm_call", log_response_length)
@@ -673,6 +712,7 @@ def my_callback(session_id: str, model: str, platform: str, **kwargs):
 ```python
 _session_caches = {}
 
+
 def init_session(session_id, model, platform, **kwargs):
     _session_caches[session_id] = {
         "model": model,
@@ -680,6 +720,7 @@ def init_session(session_id, model, platform, **kwargs):
         "tool_calls": 0,
         "started": __import__("datetime").datetime.now().isoformat(),
     }
+
 
 def register(ctx):
     ctx.register_hook("on_session_start", init_session)
@@ -719,12 +760,16 @@ def my_callback(session_id: str, completed: bool, interrupted: bool,
 ```python
 _session_caches = {}
 
+
 def cleanup_session(session_id, completed, interrupted, **kwargs):
     cache = _session_caches.pop(session_id, None)
     if cache:
         # Flush accumulated data to disk or external service
-        status = "completed" if completed else ("interrupted" if interrupted else "failed")
+        status = (
+            "completed" if completed else ("interrupted" if interrupted else "failed")
+        )
         print(f"Session {session_id} ended: {status}, {cache['tool_calls']} tool calls")
+
 
 def register(ctx):
     ctx.register_hook("on_session_end", cleanup_session)
@@ -734,19 +779,28 @@ def register(ctx):
 
 ```python
 import time, logging
+
 logger = logging.getLogger(__name__)
 
 _start_times = {}
 
+
 def on_start(session_id, **kwargs):
     _start_times[session_id] = time.time()
+
 
 def on_end(session_id, completed, interrupted, **kwargs):
     start = _start_times.pop(session_id, None)
     if start:
         duration = time.time() - start
-        logger.info("SESSION_DURATION session=%s seconds=%.1f completed=%s interrupted=%s",
-                     session_id, duration, completed, interrupted)
+        logger.info(
+            "SESSION_DURATION session=%s seconds=%.1f completed=%s interrupted=%s",
+            session_id,
+            duration,
+            completed,
+            interrupted,
+        )
+
 
 def register(ctx):
     ctx.register_hook("on_session_start", on_start)
@@ -835,13 +889,19 @@ def my_callback(parent_session_id: str, child_role: str | None,
 
 ```python
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 def log_subagent(parent_session_id, child_role, child_status, duration_ms, **kwargs):
     logger.info(
         "SUBAGENT parent=%s role=%s status=%s duration_ms=%d",
-        parent_session_id, child_role, child_status, duration_ms,
+        parent_session_id,
+        child_role,
+        child_status,
+        duration_ms,
     )
+
 
 def register(ctx):
     ctx.register_hook("subagent_stop", log_subagent)
@@ -890,6 +950,7 @@ def deny_unauthorized_dms(event, **kwargs):
         return {"action": "skip", "reason": "unauthorized-dm"}
     return None
 
+
 def register(ctx):
     ctx.register_hook("pre_gateway_dispatch", deny_unauthorized_dms)
 ```
@@ -898,6 +959,7 @@ def register(ctx):
 
 ```python
 _buffers = {}
+
 
 def buffer_or_rewrite(event, **kwargs):
     key = (event.source.platform, event.source.chat_id)
@@ -908,6 +970,7 @@ def buffer_or_rewrite(event, **kwargs):
         return {"action": "rewrite", "text": combined}
     buf.append(event.text)
     return {"action": "skip", "reason": "ambient-buffered"}
+
 
 def register(ctx):
     ctx.register_hook("pre_gateway_dispatch", buffer_or_rewrite)
@@ -953,13 +1016,16 @@ def my_callback(
 ```python
 import subprocess
 
+
 def notify_approval(command, description, session_key, **kwargs):
     title = "Hermes needs approval"
     body = f"{description}: {command[:80]}"
     subprocess.Popen([
-        "osascript", "-e",
+        "osascript",
+        "-e",
         f'display notification "{body}" with title "{title}"',
     ])
+
 
 def register(ctx):
     ctx.register_hook("pre_approval_request", notify_approval)
@@ -1000,6 +1066,7 @@ def my_callback(
 def log_decision(command, choice, session_key, **kwargs):
     logger.info("approval %s: %s for session %s", choice, command[:60], session_key)
 
+
 def register(ctx):
     ctx.register_hook("post_approval_response", log_decision)
 ```
@@ -1035,12 +1102,15 @@ def my_callback(
 
 ```python
 import re
+
 SECRET = re.compile(r"sk-[A-Za-z0-9]{32,}")
+
 
 def redact_secrets(tool_name, result, **kwargs):
     if SECRET.search(result):
         return SECRET.sub("[REDACTED]", result)
     return None
+
 
 def register(ctx):
     ctx.register_hook("transform_tool_result", redact_secrets)
@@ -1086,6 +1156,7 @@ def summarize_find(command, output, **kwargs):
         return f"{head}\n\n[summary: {lines} paths total, showing first 40]"
     return None
 
+
 def register(ctx):
     ctx.register_hook("transform_terminal_output", summarize_find)
 ```
@@ -1124,10 +1195,12 @@ def my_callback(
 ```python
 import os, re
 
+
 def spongebob(response_text, **kwargs):
     if os.environ.get("SPONGEBOB_MODE") != "on":
         return None  # pass through unchanged
     return re.sub(r"!", "!! Tartar sauce!", response_text)
+
 
 def register(ctx):
     ctx.register_hook("transform_llm_output", spongebob)
