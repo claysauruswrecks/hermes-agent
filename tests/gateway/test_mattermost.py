@@ -1034,3 +1034,21 @@ async def test_mattermost_dm_post_does_not_seed_thread_root():
     msg_event = adapter.handle_message.call_args[0][0]
     assert msg_event.source.thread_id is None
     assert msg_event.source.message_id == "dm_post_123"
+
+
+# ---------------------------------------------------------------------------
+# Adapter support flags for tool progress and message editing
+# ---------------------------------------------------------------------------
+
+class TestMattermostAdapterSupportFlags:
+    def setup_method(self):
+        self.adapter = _make_adapter()
+
+    def test_supports_tool_progress_returns_true(self):
+        """Mattermost adapter should report that it supports tool progress events."""
+        assert self.adapter.supports_tool_progress() is True
+
+    def test_supports_edit_messages_returns_true(self):
+        """Mattermost adapter should report that it supports editing messages for progress updates."""
+        assert self.adapter.supports_edit_messages() is True
+

@@ -72,6 +72,7 @@ class MattermostAdapter(BasePlatformAdapter):
     """Gateway adapter for Mattermost (self-hosted or cloud)."""
 
     splits_long_messages = True  # send() chunks via truncate_message(MAX_POST_LENGTH)
+    supports_code_blocks = True  # Mattermost uses standard Markdown which natively supports fenced code blocks
 
     def __init__(self, config: PlatformConfig):
         super().__init__(config, Platform.MATTERMOST)
@@ -406,6 +407,14 @@ class MattermostAdapter(BasePlatformAdapter):
         if not data or "id" not in data:
             return SendResult(success=False, error="Failed to edit post")
         return SendResult(success=True, message_id=data["id"])
+
+    def supports_tool_progress(self) -> bool:
+        """Return True if this adapter supports tool progress events."""
+        return True
+
+    def supports_edit_messages(self) -> bool:
+        """Return True if this adapter supports editing messages for progress updates."""
+        return True
 
     async def send_image(
         self,

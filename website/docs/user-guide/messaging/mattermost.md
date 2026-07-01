@@ -333,6 +333,22 @@ Always set `MATTERMOST_ALLOWED_USERS` to restrict who can interact with the bot.
 
 For more information on securing your Hermes Agent deployment, see the [Security Guide](../security.md).
 
+## Scratch Text Display (Reasoning & Thinking)
+
+Hermes includes reasoning/thinking trace display features controlled by the `show_reasoning` and `thinking_progress` settings in `config.yaml`. These expose model scratch text rather than deliberate user-facing output. 
+
+**For Mattermost**, because of the high-noise nature of threaded chat surfaces, a global opt-in is too broad. Scratch text features must be enabled with an **explicit per-platform override**:
+
+```yaml
+display:
+  platforms:
+    mattermost:
+      show_reasoning: true     # Show model reasoning/thinking above each response
+      thinking_progress: true  # Surface internal analysis steps inline
+```
+
+Without this explicit per-platform opt-in, global `show_reasoning: true` or `thinking_progress: true` settings will **not** surface scratch text in Mattermost conversations. This guard prevents unintended leakage of model analysis into busy public threads while still allowing explicit opt-in when desired.
+
 ## Notes
 
 - **Self-hosted friendly**: Works with any self-hosted Mattermost instance. No Mattermost Cloud account or subscription required.
