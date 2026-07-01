@@ -306,3 +306,119 @@ def test_explicit_non_stream_stale_timeout_is_honored_for_local_endpoints(monkey
     )
 
     assert agent._compute_non_stream_stale_timeout([]) == 300.0
+
+
+def test_get_minimum_client_timeout_from_config(monkeypatch, tmp_path):
+    """Test that minimum client timeout is read from config."""
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    (tmp_path / ".env").write_text("", encoding="utf-8")
+    _write_config(
+        tmp_path,
+        """\
+min_client_timeout_seconds: 300
+""",
+    )
+
+    from hermes_cli.timeouts import get_minimum_client_timeout
+    
+    # Clear cache if any
+    import importlib
+    from hermes_cli import config as cfg_mod
+    importlib.reload(cfg_mod)
+    
+    timeout = get_minimum_client_timeout()
+    assert timeout == 300.0
+
+
+def test_get_minimum_client_timeout_invalid_config_values(monkeypatch, tmp_path):
+    """Test that invalid minimum client timeout values return None."""
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    (tmp_path / ".env").write_text("", encoding="utf-8")
+    
+    # Test negative value
+    _write_config(
+        tmp_path,
+        """\
+min_client_timeout_seconds: -5
+""",
+    )
+
+    import importlib
+    from hermes_cli import config as cfg_mod
+    from hermes_cli import timeouts as to_mod
+    importlib.reload(cfg_mod)
+    importlib.reload(to_mod)
+
+    from hermes_cli.timeouts import get_minimum_client_timeout
+    
+    assert get_minimum_client_timeout() is None
+    
+    # Test string value
+    _write_config(
+        tmp_path,
+        """\
+min_client_timeout_seconds: "fast"
+""",
+    )
+    importlib.reload(cfg_mod)
+    importlib.reload(to_mod)
+    
+    assert get_minimum_client_timeout() is None
+
+
+def test_get_minimum_client_timeout_env_fallback(monkeypatch, tmp_path):
+    """Test that minimum client timeout falls back to environment variable."""
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    (tmp_path / ".env").write_text("", encoding="utf-8")
+    
+    # Ensure config doesn't have the setting
+    _write_config(
+        tmp_path,
+        """\
+# No min_client_timeout_seconds here
+""",
+    )
+
+    import importlib
+    from hermes_cli import config as cfg_mod
+    from hermes_cli import timeouts as to_mod
+    importlib.reload(cfg_mod)
+    importlib.reload(to_mod)
+
+    # Set environment variable
+    monkeypatch.setenv("HERMES_MIN_CLIENT_TIMEOUT_SECONDS", "600")
+    
+    from hermes_cli.timeouts import get_minimum_client_timeout
+    
+    assert get_minimum_client_timeout() == 600.0
+
+
+def test_get_minimum_client_timeout_env_invalid_values(monkeypatch, tmp_path):
+    """Test that invalid environment variable values for minimum client timeout are ignored."""
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    (tmp_path / ".env").write_text("", encoding="utf-8")
+    
+    _write_config(
+        tmp_path,
+        """\
+# No min_client_timeout_seconds here
+""",
+    )
+
+    import importlib
+    from hermes_cli import config as cfg_mod
+    from hermes_cli import timeouts as to_mod
+    importlib.reload(cfg_mod)
+    importlib.reload(to_mod)
+
+    # Set invalid environment variable (negative)
+    monkeypatch.setenv("HERMES_MIN_CLIENT_TIMEOUT_SECONDS", "-10")
+    
+    from hermes_cli.timeouts import get_minimum_client_timeout
+    
+    assert get_minimum_client_timeout() is None
+    
+    # Set invalid environment variable (string)
+    monkeypatch.setenv("HERMES_MIN_CLIENT_TIMEOUT_SECONDS", "slow")
+    
+    assert get_minimum_client_timeout() is None

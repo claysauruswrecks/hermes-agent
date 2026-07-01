@@ -120,6 +120,21 @@ model:
 #         stale_timeout_seconds: 1800  # Longer non-stream stale timeout for slow large-context turns
 
 # =============================================================================
+# Minimum Client Timeout Enforcer (optional)
+# =============================================================================
+# When defined, this parameter enforces a minimum value for any client-side
+# timeouts that Hermes defines or calculates. This is useful when running
+# into timeouts that aren't configurable in the underlying client libraries
+# or vendor endpoints — instead of trying to override every individual
+# timeout setting, you can set a floor that guarantees all HTTP/SDK requests
+# have at least this much time.
+#
+# Format: numeric value in seconds (e.g., 300 for 5 minutes)
+# Default: Not defined / Disabled
+#
+# min_client_timeout_seconds: 300
+
+# =============================================================================
 # OpenRouter Provider Routing (only applies when using OpenRouter)
 # =============================================================================
 # Control how requests are routed across providers on OpenRouter.

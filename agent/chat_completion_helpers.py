@@ -1862,6 +1862,8 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
     def _call_chat_completions():
         """Stream a chat completions response."""
         import httpx as _httpx
+        from hermes_cli.timeouts import get_minimum_client_timeout
+        
         # Per-provider / per-model request_timeout_seconds (from config.yaml)
         # wins over the HERMES_API_TIMEOUT env default if the user set it.
         _provider_timeout_cfg = get_provider_request_timeout(agent.provider, agent.model)
@@ -1870,6 +1872,17 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
             if _provider_timeout_cfg is not None
             else env_float("HERMES_API_TIMEOUT", 1800.0)
         )
+        
+        # Apply minimum client timeout enforcement if defined
+        _min_client_timeout = get_minimum_client_timeout()
+        if _min_client_timeout is not None:
+            if _base_timeout < _min_client_timeout:
+                logger.debug(
+                    "Enforcing minimum client timeout of %.0fs (was %.0fs)",
+                    _min_client_timeout, _base_timeout
+                )
+                _base_timeout = float(_min_client_timeout)
+        
         # Read timeout: config wins here too.  Otherwise use
         # HERMES_STREAM_READ_TIMEOUT (default 120s) for cloud providers.
         if _provider_timeout_cfg is not None:
@@ -1908,7 +1921,8 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
                 )
         # Cap connect/pool at 60s even when provider timeout is higher.
         # connect/pool cover TCP handshake, not model inference.
-        _conn_cap = min(_base_timeout, 60.0) if _provider_timeout_cfg is not None else 30.0
+        _conn_cap = min(_base_timeout, 60.0) if _provider_timeout_cfg is not None else float(min(60.0, _min_client_timeout or 30.0))
+        
         stream_kwargs = {
             **api_kwargs,
             "stream": True,

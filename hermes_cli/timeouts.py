@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 
 
 def _coerce_timeout(raw: object) -> float | None:
@@ -9,6 +10,36 @@ def _coerce_timeout(raw: object) -> float | None:
     if timeout <= 0:
         return None
     return timeout
+
+
+def get_minimum_client_timeout(config: dict[str, object] | None = None) -> float | None:
+    """Return the configured minimum client timeout in seconds, if any.
+    
+    When defined, this parameter enforces a minimum value for any client-side
+    timeouts that Hermes defines or calculates.
+    """
+    # Try to get config from cache first
+    try:
+        if config is None:
+            from hermes_cli.config import load_config_readonly
+            config = load_config_readonly()
+    except Exception:
+        return None
+
+    min_timeout = _coerce_timeout(config.get("min_client_timeout_seconds"))
+    
+    # Fallback to environment variable for backwards compatibility or CLI overrides
+    if min_timeout is None:
+        env_val = os.environ.get("HERMES_MIN_CLIENT_TIMEOUT_SECONDS")
+        if env_val is not None:
+            try:
+                env_float_val = float(env_val)
+                if env_float_val > 0:
+                    return env_float_val
+            except (TypeError, ValueError):
+                pass
+                
+    return min_timeout
 
 
 def get_provider_request_timeout(
