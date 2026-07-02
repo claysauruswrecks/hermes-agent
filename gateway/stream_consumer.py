@@ -1,8 +1,8 @@
 """Gateway streaming consumer — bridges sync agent callbacks to async platform delivery.
 
-The agent fires stream_delta_callback(text) synchronously from its worker thread.
+The agent fires stream_delta_callback(text) and reasoning_callback(text) synchronously from its worker thread.
 GatewayStreamConsumer:
-  1. Receives deltas via on_delta() (thread-safe, sync)
+  1. Receives deltas via on_delta() and reasoning deltas via on_reasoning_delta() (thread-safe, sync)
   2. Queues them to an asyncio task via queue.Queue
   3. The async run() task buffers, rate-limits, and progressively edits
      a single message on the target platform
@@ -364,6 +364,17 @@ class GatewayStreamConsumer:
             self._queue.put(text)
         elif text is None:
             self.on_segment_break()
+
+    def on_reasoning_delta(self, text: str) -> None:
+        """Thread-safe callback for reasoning tokens — called from the agent's worker thread.
+
+        When *text* is provided, it's queued for display if verbose_reasoning is enabled.
+        """
+        if text and self.cfg.verbose_reasoning:
+            # Format reasoning text to distinguish it from regular content
+            # Use a specific format that platforms can display appropriately
+            formatted_text = f"💭 **Reasoning:** {text}"
+            self._queue.put(formatted_text)
 
     def finish(self) -> None:
         """Signal that the stream is complete."""

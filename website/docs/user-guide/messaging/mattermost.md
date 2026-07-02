@@ -175,6 +175,8 @@ mattermost:
   free_response_channels: []  # Channel IDs where bot responds without @mention
   allowed_channels: []        # Channel IDs where bot ONLY responds (whitelist)
   verbose_reasoning: false    # When true, reasoning/thinking blocks are displayed to the user
+    # NOTE: verbose_reasoning requires streaming to be enabled for the platform.
+    # Ensure streaming: true is set in the platforms section for discord/mattermost.
 ```
 
 - `group_sessions_per_user: true` keeps each participant's context isolated inside shared channels and threads

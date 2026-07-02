@@ -878,9 +878,18 @@ def build_assistant_message(agent, assistant_message, finish_reason: str) -> dic
         #   (b) _stream_delta tag extraction (<think>/<REASONING_SCRATCHPAD>)
         # When streaming is NOT active, always fire so non-streaming modes
         # (gateway, batch, quiet) still get reasoning.
-        # Any reasoning that wasn't shown during streaming is caught by the
-        # CLI post-response display fallback (cli.py _reasoning_shown_this_turn).
-        if not agent.stream_delta_callback and not agent._stream_callback:
+        # However, if the stream consumer has verbose_reasoning enabled,
+        # the reasoning_callback is wired to display reasoning tokens
+        # between tool calls.
+        has_stream_consumer = agent.stream_delta_callback is not None or agent._stream_callback is not None
+        verbose_reasoning_enabled = False
+        if has_stream_consumer and hasattr(agent.stream_delta_callback, '__self__'):
+            stream_consumer = agent.stream_delta_callback.__self__
+            if hasattr(stream_consumer, 'cfg') and hasattr(stream_consumer.cfg, 'verbose_reasoning'):
+                verbose_reasoning_enabled = stream_consumer.cfg.verbose_reasoning
+        
+        # Fire the callback if no stream consumer OR if stream consumer has verbose_reasoning enabled
+        if not has_stream_consumer or verbose_reasoning_enabled:
             try:
                 agent.reasoning_callback(reasoning_text)
             except Exception:

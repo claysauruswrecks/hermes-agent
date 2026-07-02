@@ -10491,7 +10491,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     source, session_entry, reason="agent-result-compression",
                 )
 
-            # Prepend reasoning/thinking if display is enabled (per-platform).
+            # Prepend reasoning/thinking if display is enabled (per-platform) OR if verbose_reasoning is enabled.
             # Mattermost requires explicit per-platform opt-in because this is
             # scratch text, not ordinary final-answer content.
             try:
@@ -10509,7 +10509,17 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     if source.platform == Platform.MATTERMOST
                     else getattr(self, "_show_reasoning", False)
                 )
-            if _show_reasoning_effective and response and not _intentional_silence:
+            
+            # Check if verbose_reasoning is enabled for this platform
+            _verbose_reasoning_effective = False
+            _adapter = self.adapters.get(source.platform)
+            if source.platform == Platform.DISCORD and hasattr(_adapter, "_discord_verbose_reasoning"):
+                _verbose_reasoning_effective = _adapter._discord_verbose_reasoning()
+            elif source.platform == Platform.MATTERMOST and hasattr(_adapter, "_mattermost_verbose_reasoning"):
+                _verbose_reasoning_effective = _adapter._mattermost_verbose_reasoning()
+            
+            # Show reasoning if either show_reasoning is effective OR verbose_reasoning is enabled
+            if (_show_reasoning_effective or _verbose_reasoning_effective) and response and not _intentional_silence:
                 last_reasoning = agent_result.get("last_reasoning")
                 if last_reasoning:
                     # Collapse long reasoning to keep messages readable
@@ -10519,31 +10529,37 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                         display_reasoning += f"\n_... ({len(lines) - 15} more lines)_"
                     else:
                         display_reasoning = last_reasoning.strip()
-                    # Render style is per-platform: Discord defaults to "-# "
-                    # subtext (native small grey metadata text); other
-                    # platforms keep the fenced code block.
-                    try:
-                        from gateway.display_config import resolve_display_setting
-                        _reasoning_style = resolve_display_setting(
-                            _load_gateway_config(),
-                            _platform_config_key(source.platform),
-                            "reasoning_style",
-                            "code",
-                        )
-                    except Exception:
-                        _reasoning_style = "code"
-                    if _reasoning_style == "subtext":
-                        _quoted = "\n".join(
-                            f"-# {ln}" if ln else "-#" for ln in display_reasoning.splitlines()
-                        )
-                        response = f"-# 💭 Reasoning\n{_quoted}\n\n{response}"
-                    elif _reasoning_style == "blockquote":
-                        _quoted = "\n".join(
-                            f"> {ln}" if ln else ">" for ln in display_reasoning.splitlines()
-                        )
-                        response = f"> 💭 **Reasoning:**\n{_quoted}\n\n{response}"
+                    
+                    # For verbose_reasoning without show_reasoning, use the streaming format
+                    if _verbose_reasoning_effective and not _show_reasoning_effective:
+                        # Use the streaming format for verbose_reasoning
+                        response = f"💭 **Reasoning:** {display_reasoning}\n\n{response}"
                     else:
-                        response = f"💭 **Reasoning:**\n```\n{display_reasoning}\n```\n\n{response}"
+                        # Render style is per-platform: Discord defaults to "-# "
+                        # subtext (native small grey metadata text); other
+                        # platforms keep the fenced code block.
+                        try:
+                            from gateway.display_config import resolve_display_setting
+                            _reasoning_style = resolve_display_setting(
+                                _load_gateway_config(),
+                                _platform_config_key(source.platform),
+                                "reasoning_style",
+                                "code",
+                            )
+                        except Exception:
+                            _reasoning_style = "code"
+                        if _reasoning_style == "subtext":
+                            _quoted = "\n".join(
+                                f"-# {ln}" if ln else "-#" for ln in display_reasoning.splitlines()
+                            )
+                            response = f"-# 💭 Reasoning\n{_quoted}\n\n{response}"
+                        elif _reasoning_style == "blockquote":
+                            _quoted = "\n".join(
+                                f"> {ln}" if ln else ">" for ln in display_reasoning.splitlines()
+                            )
+                            response = f"> 💭 **Reasoning:**\n{_quoted}\n\n{response}"
+                        else:
+                            response = f"💭 **Reasoning:**\n```\n{display_reasoning}\n```\n\n{response}"
 
             # Runtime-metadata footer — only on the FINAL message of the turn.
             # Off by default (display.runtime_footer.enabled=false).  When
@@ -16308,6 +16324,12 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                             def _stream_delta_cb(text: str) -> None:
                                 if _run_still_current():
                                     _stream_consumer.on_delta(text)
+                            # Set up reasoning callback if verbose_reasoning is enabled
+                            _reasoning_delta_cb = None
+                            if _stream_consumer.cfg.verbose_reasoning:
+                                def _reasoning_delta_cb(text: str) -> None:
+                                    if _run_still_current():
+                                        _stream_consumer.on_reasoning_delta(text)
                         stream_consumer_holder[0] = _stream_consumer
                 except Exception as _sc_err:
                     logger.debug("Could not set up stream consumer: %s", _sc_err)
@@ -16500,6 +16522,9 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             )
             agent.step_callback = _step_callback_sync if _hooks_ref.loaded_hooks else None
             agent.stream_delta_callback = _stream_delta_cb
+            # Wire reasoning callback if verbose_reasoning is enabled and we have a stream consumer
+            if _stream_consumer and _stream_consumer.cfg.verbose_reasoning:
+                agent.reasoning_callback = _reasoning_delta_cb
             agent.interim_assistant_callback = _interim_assistant_cb if _want_interim_messages else None
             agent.status_callback = _status_callback_sync
             # Credits / out-of-band notices (usage bands, depletion, restored).

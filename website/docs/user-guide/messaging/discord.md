@@ -329,6 +329,8 @@ discord:
     users: true                   # @user pings (default: true)
     replied_user: true            # reply-reference pings the author (default: true)
   verbose_reasoning: false        # When true, reasoning/thinking blocks are displayed to the user (default: false)
+    # NOTE: verbose_reasoning requires streaming to be enabled for the platform.
+    # Ensure streaming: true is set in the platforms section for discord/mattermost.
 
 # Session isolation (applies to all gateway platforms, not just Discord)
 group_sessions_per_user: true     # Isolate sessions per user in shared channels
