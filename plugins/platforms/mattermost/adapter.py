@@ -416,6 +416,20 @@ class MattermostAdapter(BasePlatformAdapter):
         """Return True if this adapter supports editing messages for progress updates."""
         return True
 
+    def _mattermost_verbose_reasoning(self) -> bool:
+        """Return whether Mattermost should display all reasoning tokens.
+
+        When ``True`` (default ``False``), reasoning/thinking blocks like
+        ``<REASONING_SCRATCHPAD>``, ``<think>``, etc. are NOT filtered out
+        and are displayed to the user in the streaming display.
+        """
+        configured = self.config.extra.get("verbose_reasoning")
+        if configured is not None:
+            if isinstance(configured, str):
+                return configured.lower() not in {"false", "0", "no", "off"}
+            return bool(configured)
+        return os.getenv("MATTERMOST_VERBOSE_REASONING", "false").lower() in {"true", "1", "yes", "on"}
+
     async def send_image(
         self,
         chat_id: str,

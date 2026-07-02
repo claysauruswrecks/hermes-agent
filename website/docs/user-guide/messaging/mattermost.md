@@ -155,12 +155,26 @@ MATTERMOST_ALLOWED_USERS=3uo8dkh1p7g1mfk49ear5fzs5c
 
 # Optional: channels where bot responds without @mention (comma-separated channel IDs)
 # MATTERMOST_FREE_RESPONSE_CHANNELS=channel_id_1,channel_id_2
+
+# Optional: when true, reasoning/thinking blocks like <REASONING_SCRATCHPAD>, <think>, etc. are NOT filtered out and are displayed to the user in the streaming display. Default is false.
+# MATTERMOST_VERBOSE_REASONING=true
 ```
 
 Optional behavior settings in `~/.hermes/config.yaml`:
 
 ```yaml
 group_sessions_per_user: true
+```
+
+Optional Mattermost-specific settings in `~/.hermes/config.yaml`:
+
+```yaml
+mattermost:
+  reply_mode: "off"           # "off" or "thread" - how replies are posted
+  require_mention: true       # Require @mention in channels
+  free_response_channels: []  # Channel IDs where bot responds without @mention
+  allowed_channels: []        # Channel IDs where bot ONLY responds (whitelist)
+  verbose_reasoning: false    # When true, reasoning/thinking blocks are displayed to the user
 ```
 
 - `group_sessions_per_user: true` keeps each participant's context isolated inside shared channels and threads
@@ -348,6 +362,23 @@ display:
 ```
 
 Without this explicit per-platform opt-in, global `show_reasoning: true` or `thinking_progress: true` settings will **not** surface scratch text in Mattermost conversations. This guard prevents unintended leakage of model analysis into busy public threads while still allowing explicit opt-in when desired.
+
+### Verbose Reasoning Option
+
+Additionally, Mattermost supports a `verbose_reasoning` configuration option that controls whether reasoning/thinking blocks like `<REASONING_SCRATCHPAD>`, `<think>`, etc. are filtered out during streaming display:
+
+```yaml
+mattermost:
+  verbose_reasoning: true    # When true, reasoning/thinking blocks are displayed to the user
+```
+
+Or via environment variable:
+
+```bash
+MATTERMOST_VERBOSE_REASONING=true
+```
+
+When enabled, reasoning/thinking blocks are NOT filtered out and are displayed to the user in the streaming display. Default is `false` to maintain current filtering behavior.
 
 ## Notes
 

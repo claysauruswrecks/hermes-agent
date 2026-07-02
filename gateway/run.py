@@ -15080,6 +15080,9 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     _verbose_reasoning = False
                     if source.platform == Platform.DISCORD and hasattr(_adapter, "_discord_verbose_reasoning"):
                         _verbose_reasoning = _adapter._discord_verbose_reasoning()
+                    # Verbose reasoning: Mattermost can opt-in to display all reasoning tokens
+                    if source.platform == Platform.MATTERMOST and hasattr(_adapter, "_mattermost_verbose_reasoning"):
+                        _verbose_reasoning = _adapter._mattermost_verbose_reasoning()
                     _consumer_cfg = StreamConsumerConfig(
                         edit_interval=_scfg.edit_interval,
                         buffer_threshold=_scfg.buffer_threshold,
@@ -16275,6 +16278,9 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                         _verbose_reasoning = False
                         if source.platform == Platform.DISCORD and hasattr(_adapter, "_discord_verbose_reasoning"):
                             _verbose_reasoning = _adapter._discord_verbose_reasoning()
+                        # Verbose reasoning: Mattermost can opt-in to display all reasoning tokens
+                        if source.platform == Platform.MATTERMOST and hasattr(_adapter, "_mattermost_verbose_reasoning"):
+                            _verbose_reasoning = _adapter._mattermost_verbose_reasoning()
                         _consumer_cfg = StreamConsumerConfig(
                             edit_interval=_scfg.edit_interval,
                             buffer_threshold=_scfg.buffer_threshold,
