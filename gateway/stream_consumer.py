@@ -74,6 +74,11 @@ class StreamConsumerConfig:
     # "group", "supergroup", "forum").  Used to gate native draft streaming,
     # which is platform-specific (Telegram drafts are DM-only).
     chat_type: str = ""
+    # When True, reasoning/thinking blocks are NOT filtered out and are
+    # displayed to the user. Default False maintains current behavior where
+    # reasoning tags like <REASONING_SCRATCHPAD>, <think>, etc. are suppressed
+    # from the streaming display.
+    verbose_reasoning: bool = False
 
 
 class GatewayStreamConsumer:
@@ -379,7 +384,16 @@ class GatewayStreamConsumer:
         reasoning/thinking block.  Text inside such blocks is silently
         discarded.  Partial tags at buffer boundaries are held back in
         ``_think_buffer`` until enough characters arrive to decide.
+
+        If verbose_reasoning is True, reasoning blocks are NOT filtered and
+        are displayed to the user.
         """
+        # If verbose_reasoning is enabled, skip think-block filtering
+        if self.cfg.verbose_reasoning:
+            self._accumulated += text
+            self._think_buffer = ""
+            return
+
         buf = self._think_buffer + text
         self._think_buffer = ""
 

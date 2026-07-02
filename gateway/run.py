@@ -15076,6 +15076,10 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                         if source.platform == Platform.TELEGRAM
                         else 0.0
                     )
+                    # Verbose reasoning: Discord can opt-in to display all reasoning tokens
+                    _verbose_reasoning = False
+                    if source.platform == Platform.DISCORD and hasattr(_adapter, "_discord_verbose_reasoning"):
+                        _verbose_reasoning = _adapter._discord_verbose_reasoning()
                     _consumer_cfg = StreamConsumerConfig(
                         edit_interval=_scfg.edit_interval,
                         buffer_threshold=_scfg.buffer_threshold,
@@ -15084,6 +15088,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                         fresh_final_after_seconds=_fresh_final_secs,
                         transport=_scfg.transport or "edit",
                         chat_type=getattr(source, "chat_type", "") or "",
+                        verbose_reasoning=_verbose_reasoning,
                     )
                     _stream_consumer = GatewayStreamConsumer(
                         adapter=_adapter,
@@ -16266,6 +16271,10 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                             if source.platform == Platform.TELEGRAM
                             else 0.0
                         )
+                        # Verbose reasoning: Discord can opt-in to display all reasoning tokens
+                        _verbose_reasoning = False
+                        if source.platform == Platform.DISCORD and hasattr(_adapter, "_discord_verbose_reasoning"):
+                            _verbose_reasoning = _adapter._discord_verbose_reasoning()
                         _consumer_cfg = StreamConsumerConfig(
                             edit_interval=_scfg.edit_interval,
                             buffer_threshold=_scfg.buffer_threshold,
@@ -16274,6 +16283,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                             fresh_final_after_seconds=_fresh_final_secs,
                             transport=_scfg.transport or "edit",
                             chat_type=getattr(source, "chat_type", "") or "",
+                            verbose_reasoning=_verbose_reasoning,
                         )
                         _stream_consumer = GatewayStreamConsumer(
                             adapter=_adapter,

@@ -4377,6 +4377,20 @@ class DiscordAdapter(BasePlatformAdapter):
             return bool(configured)
         return os.getenv("DISCORD_THREAD_REQUIRE_MENTION", "false").lower() in {"true", "1", "yes", "on"}
 
+    def _discord_verbose_reasoning(self) -> bool:
+        """Return whether Discord should display all reasoning tokens.
+
+        When ``True`` (default ``False``), reasoning/thinking blocks like
+        ``<REASONING_SCRATCHPAD>``, ``<think>``, etc. are NOT filtered out
+        and are displayed to the user in the streaming display.
+        """
+        configured = self.config.extra.get("verbose_reasoning")
+        if configured is not None:
+            if isinstance(configured, str):
+                return configured.lower() not in {"false", "0", "no", "off"}
+            return bool(configured)
+        return os.getenv("DISCORD_VERBOSE_REASONING", "false").lower() in {"true", "1", "yes", "on"}
+
     def _discord_history_backfill(self) -> bool:
         """Return whether history backfill is enabled for shared sessions."""
         configured = self.config.extra.get("history_backfill")
