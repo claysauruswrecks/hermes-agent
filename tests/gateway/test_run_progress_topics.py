@@ -245,6 +245,33 @@ class DelayedInterimAgent:
         }
 
 
+class ReasoningProgressAgent:
+    """Agent that emits reasoning tokens via reasoning_callback."""
+
+    def __init__(self, **kwargs):
+        self.tool_progress_callback = kwargs.get("tool_progress_callback")
+        self.reasoning_callback = kwargs.get("reasoning_callback")
+        self.tools = []
+
+    def run_conversation(self, message, conversation_history=None, task_id=None):
+        cb = self.tool_progress_callback
+        if cb is not None:
+            cb("tool.started", "terminal", "pwd", {})
+            time.sleep(0.35)
+
+        # Emit reasoning callback if available
+        rc = self.reasoning_callback
+        if rc is not None:
+            rc("Let me reason through this...")
+            time.sleep(0.35)
+
+        return {
+            "final_response": "done",
+            "messages": [],
+            "api_calls": 1,
+        }
+
+
 def _make_runner(adapter):
     gateway_run = importlib.import_module("gateway.run")
     GatewayRunner = gateway_run.GatewayRunner
@@ -1668,3 +1695,23 @@ async def test_run_agent_suppresses_thinking_when_thinking_off(monkeypatch, tmp_
         [c["content"] for c in adapter.sent] + [c["content"] for c in adapter.edits]
     )
     assert "weighing the options here" not in blob
+
+
+@pytest.mark.asyncio
+async def test_run_agent_relays_reasoning_when_thinking_progress_on(monkeypatch, tmp_path):
+    """reasoning tokens relay as a bubble when thinking_progress is on,
+    even with streaming disabled and tool_progress off."""
+    monkeypatch.setenv("HERMES_TOOL_PROGRESS_MODE", "off")
+    adapter, result = await _run_with_agent(
+        monkeypatch,
+        tmp_path,
+        ReasoningProgressAgent,
+        session_id="sess-reasoning-on",
+        config_data={"display": {"thinking_progress": True, "tool_progress": "off"}},
+    )
+
+    assert result["final_response"] == "done"
+    blob = "\n".join(
+        [c["content"] for c in adapter.sent] + [c["content"] for c in adapter.edits]
+    )
+    assert "Let me reason through this..." in blob

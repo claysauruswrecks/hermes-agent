@@ -16330,6 +16330,13 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                                 def _reasoning_delta_cb(text: str) -> None:
                                     if _run_still_current():
                                         _stream_consumer.on_reasoning_delta(text)
+                        # Set up reasoning progress callback for thinking_progress when streaming is disabled
+                        _reasoning_progress_cb = None
+                        if _thinking_enabled and progress_queue is not None:
+                            def _reasoning_progress_cb(text: str) -> None:
+                                if _run_still_current() and progress_queue is not None:
+                                    msg = f"💬 {text}"
+                                    progress_queue.put(msg)
                         stream_consumer_holder[0] = _stream_consumer
                 except Exception as _sc_err:
                     logger.debug("Could not set up stream consumer: %s", _sc_err)
@@ -16522,9 +16529,13 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             )
             agent.step_callback = _step_callback_sync if _hooks_ref.loaded_hooks else None
             agent.stream_delta_callback = _stream_delta_cb
-            # Wire reasoning callback if verbose_reasoning is enabled and we have a stream consumer
-            if _stream_consumer and _stream_consumer.cfg.verbose_reasoning:
+            # Wire reasoning callback:
+            # - If streaming is enabled and verbose_reasoning is enabled, use _reasoning_delta_cb
+            # - If thinking_progress is enabled and we have a progress queue (non-streaming mode), use _reasoning_progress_cb
+            if _want_stream_deltas and _stream_consumer and _stream_consumer.cfg.verbose_reasoning and _reasoning_delta_cb is not None:
                 agent.reasoning_callback = _reasoning_delta_cb
+            elif _thinking_enabled and progress_queue is not None and _reasoning_progress_cb is not None:
+                agent.reasoning_callback = _reasoning_progress_cb
             agent.interim_assistant_callback = _interim_assistant_cb if _want_interim_messages else None
             agent.status_callback = _status_callback_sync
             # Credits / out-of-band notices (usage bands, depletion, restored).

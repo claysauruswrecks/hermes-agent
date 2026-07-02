@@ -365,6 +365,15 @@ display:
 
 Without this explicit per-platform opt-in, global `show_reasoning: true` or `thinking_progress: true` settings will **not** surface scratch text in Mattermost conversations. This guard prevents unintended leakage of model analysis into busy public threads while still allowing explicit opt-in when desired.
 
+### Reasoning Trace Formats
+
+Hermes uses two distinct emoji formats for reasoning/thinking output to distinguish between different types of reasoning text:
+
+- **💬** for `thinking_text` (assistant scratch text) in both streaming/non-streaming states
+- **💭 **Reasoning:** ** for model reasoning text in streaming mode via `verbose_reasoning: true`
+
+When `verbose_reasoning: true` is enabled with streaming, reasoning deltas are formatted as `💭 **Reasoning:** {text}`. In non-streaming mode with `thinking_progress: true`, reasoning tokens are formatted as `💬 {text}` to match the `_thinking` event format.
+
 ### Verbose Reasoning Option
 
 Additionally, Mattermost supports a `verbose_reasoning` configuration option that controls whether reasoning/thinking blocks like `<REASONING_SCRATCHPAD>`, `<think>`, etc. are filtered out during streaming display:

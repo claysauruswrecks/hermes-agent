@@ -356,6 +356,39 @@ discord:
   thread_require_mention: true    # multi-bot setup
 ```
 
+#### `discord.verbose_reasoning`
+
+**Type:** boolean — **Default:** `false`
+
+When `true`, reasoning/thinking blocks like `<REASONING_SCRATCHPAD>`, `<think>`, etc. are NOT filtered out and are displayed to the user in the streaming display. Default is `false` to maintain current filtering behavior.
+
+**NOTE:** `verbose_reasoning` requires streaming to be enabled for the platform. Ensure `streaming: true` is set in the platforms section for discord/mattermost.
+
+### Scratch Text Display (Reasoning & Thinking)
+
+Hermes includes reasoning/thinking trace display features controlled by the `show_reasoning` and `thinking_progress` settings in `config.yaml`. These expose model scratch text rather than deliberate user-facing output. 
+
+**For Discord**, scratch text features must be enabled with an **explicit per-platform override**:
+
+```yaml
+display:
+  platforms:
+    discord:
+      show_reasoning: true     # Show model reasoning/thinking above each response
+      thinking_progress: true  # Surface internal analysis steps inline
+```
+
+Without this explicit per-platform opt-in, global `show_reasoning: true` or `thinking_progress: true` settings will **not** surface scratch text in Discord conversations. This guard prevents unintended leakage of model analysis while still allowing explicit opt-in when desired.
+
+### Reasoning Trace Formats
+
+Hermes uses two distinct emoji formats for reasoning/thinking output to distinguish between different types of reasoning text:
+
+- **💬** for `thinking_text` (assistant scratch text) in both streaming/non-streaming states
+- **💭 **Reasoning:** ** for model reasoning text in streaming mode via `verbose_reasoning: true`
+
+When `verbose_reasoning: true` is enabled with streaming, reasoning deltas are formatted as `💭 **Reasoning:** {text}`. In non-streaming mode with `thinking_progress: true`, reasoning tokens are formatted as `💬 {text}` to match the `_thinking` event format.
+
 #### `discord.free_response_channels`
 
 **Type:** string or list — **Default:** `""`
