@@ -194,6 +194,15 @@ class GatewayStreamConsumer:
         self._in_think_block = False
         self._think_buffer = ""
 
+        # Verbose reasoning state: when verbose_reasoning is enabled, the first
+        # chunk of reasoning text gets the "💭 **Reasoning:** " prefix, and
+        # subsequent chunks are just appended without the prefix.
+        self._reasoning_prefix_added = False
+        # Buffer for reasoning deltas to prevent tiny chunks from triggering
+        # excessive streaming edits. Aggregated and flushed to the queue when
+        # it reaches the buffer threshold or on stream end.
+        self._reasoning_buffer = ""
+
         # Native draft-streaming state.  Resolved at the start of run() based
         # on cfg.transport, cfg.chat_type, and the adapter's
         # supports_draft_streaming() probe.  When True, the consumer emits
@@ -370,14 +379,31 @@ class GatewayStreamConsumer:
 
         When *text* is provided, it's queued for display if verbose_reasoning is enabled.
         """
-        if text and self.cfg.verbose_reasoning:
-            # Format reasoning text to distinguish it from regular content
-            # Use a specific format that platforms can display appropriately
-            formatted_text = f"💭 **Reasoning:** {text}"
-            self._queue.put(formatted_text)
+        if not text or not self.cfg.verbose_reasoning:
+            return
+        
+        # Buffer reasoning deltas to prevent tiny chunks from triggering excessive streaming edits
+        if not self._reasoning_prefix_added:
+            text = f"💭 **Reasoning:** {text}"
+            self._reasoning_prefix_added = True
+            # First chunk with prefix is always queued immediately
+            self._queue.put(text)
+            return
+        
+        self._reasoning_buffer += text
+        
+        # Flush to queue when buffer reaches a reasonable size (e.g., 50 characters)
+        # to avoid excessive streaming edits while still providing reasonably timely updates
+        if len(self._reasoning_buffer) >= 50:
+            self._queue.put(self._reasoning_buffer)
+            self._reasoning_buffer = ""
 
     def finish(self) -> None:
         """Signal that the stream is complete."""
+        # Flush any remaining reasoning buffer
+        if self._reasoning_buffer:
+            self._queue.put(self._reasoning_buffer)
+            self._reasoning_buffer = ""
         self._queue.put(_DONE)
 
     # ── Think-block filtering ────────────────────────────────────────

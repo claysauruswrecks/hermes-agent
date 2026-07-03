@@ -15569,9 +15569,8 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                 if not _thinking_enabled:
                     return
                 thinking_text = preview if tool_name == "_thinking" else tool_name
-                msg = f"💬 {thinking_text}" if thinking_text else None
-                if msg:
-                    progress_queue.put(msg)
+                if thinking_text:
+                    progress_queue.put(thinking_text)
                 return
 
             # If tool_progress is off, only _thinking passes through (above).
@@ -16335,8 +16334,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                         if _thinking_enabled and progress_queue is not None:
                             def _reasoning_progress_cb(text: str) -> None:
                                 if _run_still_current() and progress_queue is not None:
-                                    msg = f"💬 {text}"
-                                    progress_queue.put(msg)
+                                    progress_queue.put(text)
                         stream_consumer_holder[0] = _stream_consumer
                 except Exception as _sc_err:
                     logger.debug("Could not set up stream consumer: %s", _sc_err)
