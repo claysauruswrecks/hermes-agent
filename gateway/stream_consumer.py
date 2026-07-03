@@ -196,11 +196,8 @@ class GatewayStreamConsumer:
 
         # Verbose reasoning state: when verbose_reasoning is enabled, the first
         # chunk of reasoning text gets the "💭 **Reasoning:** " prefix, and
-        # subsequent chunks are just appended without the prefix.
+        # subsequent chunks are buffered and accumulated.
         self._reasoning_prefix_added = False
-        # Buffer for reasoning deltas to prevent tiny chunks from triggering
-        # excessive streaming edits. Aggregated and flushed to the queue when
-        # it reaches the buffer threshold or on stream end.
         self._reasoning_buffer = ""
 
         # Native draft-streaming state.  Resolved at the start of run() based
@@ -382,25 +379,21 @@ class GatewayStreamConsumer:
         if not text or not self.cfg.verbose_reasoning:
             return
         
-        # Normalize line breaks in reasoning text to prevent extra line breaks
-        # when the buffer is flushed and messages are edited
-        normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
-        # Ensure we don't have excessive consecutive line breaks
-        normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
-        
         # Buffer reasoning deltas to prevent tiny chunks from triggering excessive streaming edits
         if not self._reasoning_prefix_added:
-            normalized_text = f"💭 **Reasoning:** {normalized_text}"
+            text = f"💭 **Reasoning:** {text}"
             self._reasoning_prefix_added = True
+            self._reasoning_buffer = text
             # First chunk with prefix is always queued immediately
-            self._queue.put(normalized_text)
+            self._queue.put(text)
             return
         
-        self._reasoning_buffer += normalized_text
+        # Accumulate subsequent chunks in the reasoning buffer
+        self._reasoning_buffer += text
         
-        # Flush to queue when buffer reaches a reasonable size (e.g., 50 characters)
-        # to avoid excessive streaming edits while still providing reasonably timely updates
-        if len(self._reasoning_buffer) >= 50:
+        # Only queue the buffer when it reaches the buffer threshold or on finish
+        # (the run() loop will process it when buffer_threshold is reached)
+        if len(self._reasoning_buffer) >= self.cfg.buffer_threshold:
             self._queue.put(self._reasoning_buffer)
             self._reasoning_buffer = ""
 
@@ -408,12 +401,7 @@ class GatewayStreamConsumer:
         """Signal that the stream is complete."""
         # Flush any remaining reasoning buffer
         if self._reasoning_buffer:
-            # Normalize line breaks in reasoning text to prevent extra line breaks
-            # when the buffer is flushed and messages are edited
-            normalized_text = self._reasoning_buffer.replace('\r\n', '\n').replace('\r', '\n')
-            # Ensure we don't have excessive consecutive line breaks
-            normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
-            self._queue.put(normalized_text)
+            self._queue.put(self._reasoning_buffer)
             self._reasoning_buffer = ""
         self._queue.put(_DONE)
 
@@ -438,11 +426,7 @@ class GatewayStreamConsumer:
         """
         # If verbose_reasoning is enabled, skip think-block filtering
         if self.cfg.verbose_reasoning:
-            # Normalize line breaks in text to prevent extra line breaks
-            normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
-            # Ensure we don't have excessive consecutive line breaks
-            normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
-            self._accumulated += normalized_text
+            self._accumulated += text
             self._think_buffer = ""
             return
 
