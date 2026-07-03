@@ -15536,6 +15536,16 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         _thinking_progress_buffer_threshold = [getattr(_scfg, "buffer_threshold", 24)]
         _thinking_progress_prefix_added = [False]
 
+        def _flush_thinking_progress_buffer():
+            """Flush any remaining thinking progress buffer to the progress_queue."""
+            if _thinking_progress_buffer and _thinking_progress_buffer[0]:
+                # Add "💬 " prefix only on the first flush
+                prefix = "💬 " if not _thinking_progress_prefix_added[0] else ""
+                if not _thinking_progress_prefix_added[0]:
+                    _thinking_progress_prefix_added[0] = True
+                progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
+                _thinking_progress_buffer[0] = ""
+
         def progress_callback(event_type: str, tool_name: str = None, preview: str = None, args: dict = None, **kwargs):
             """Callback invoked by agent on tool lifecycle events."""
             if not progress_queue or not _run_still_current():
@@ -15580,17 +15590,16 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     return
                 thinking_text = preview if tool_name == "_thinking" else tool_name
                 if thinking_text:
+                    # Normalize line breaks to prevent extra line breaks
+                    thinking_text = thinking_text.replace('\r\n', '\n').replace('\r', '\n')
+                    thinking_text = re.sub(r'\n{3,}', '\n\n', thinking_text)
+                    
                     # Buffer thinking_text to prevent tiny chunks from triggering excessive streaming edits
                     _thinking_progress_buffer[0] += thinking_text
                     
                     # Only queue the buffer when it reaches the buffer threshold
                     if len(_thinking_progress_buffer[0]) >= _thinking_progress_buffer_threshold[0]:
-                        # Add "💬 " prefix only on the first flush
-                        prefix = "💬 " if not _thinking_progress_prefix_added[0] else ""
-                        if not _thinking_progress_prefix_added[0]:
-                            _thinking_progress_prefix_added[0] = True
-                        progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
-                        _thinking_progress_buffer[0] = ""
+                        _flush_thinking_progress_buffer()
                 return
 
             # If tool_progress is off, only _thinking passes through (above).
@@ -16046,13 +16055,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     await asyncio.sleep(0.3)
                 except asyncio.CancelledError:
                     # Flush any remaining thinking progress buffer
-                    if _thinking_progress_buffer and _thinking_progress_buffer[0]:
-                        # Add "💬 " prefix only on the first flush
-                        prefix = "💬 " if not _thinking_progress_prefix_added[0] else ""
-                        if not _thinking_progress_prefix_added[0]:
-                            _thinking_progress_prefix_added[0] = True
-                        progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
-                        _thinking_progress_buffer[0] = ""
+                    _flush_thinking_progress_buffer()
                     # Drain remaining queued messages
                     while not progress_queue.empty():
                         try:
@@ -16091,6 +16094,8 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                             await _edit_progress_message(progress_msg_id, full_text)
                         except Exception:
                             pass
+                    # Flush any remaining thinking progress buffer on normal completion
+                    _flush_thinking_progress_buffer()
                     return
                 except Exception as e:
                     logger.error("Progress message error: %s", e)
@@ -16365,17 +16370,16 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                         if _thinking_enabled and progress_queue is not None:
                             def _reasoning_progress_cb(text: str) -> None:
                                 if _run_still_current() and progress_queue is not None:
+                                    # Normalize line breaks to prevent extra line breaks
+                                    text = text.replace('\r\n', '\n').replace('\r', '\n')
+                                    text = re.sub(r'\n{3,}', '\n\n', text)
+                                    
                                     # Buffer thinking_text to prevent tiny chunks from triggering excessive streaming edits
                                     _thinking_progress_buffer[0] += text
                                     
                                     # Only queue the buffer when it reaches the buffer threshold
                                     if len(_thinking_progress_buffer[0]) >= _thinking_progress_buffer_threshold[0]:
-                                        # Add "💬 " prefix only on the first flush
-                                        prefix = "💬 " if not _thinking_progress_prefix_added[0] else ""
-                                        if not _thinking_progress_prefix_added[0]:
-                                            _thinking_progress_prefix_added[0] = True
-                                        progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
-                                        _thinking_progress_buffer[0] = ""
+                                        _flush_thinking_progress_buffer()
                         stream_consumer_holder[0] = _stream_consumer
                 except Exception as _sc_err:
                     logger.debug("Could not set up stream consumer: %s", _sc_err)
