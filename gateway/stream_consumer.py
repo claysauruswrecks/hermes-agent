@@ -199,6 +199,7 @@ class GatewayStreamConsumer:
         # subsequent chunks are buffered and accumulated.
         self._reasoning_prefix_added = False
         self._reasoning_buffer = ""
+        self._reasoning_last_queued_len = 0
 
         # Native draft-streaming state.  Resolved at the start of run() based
         # on cfg.transport, cfg.chat_type, and the adapter's
@@ -386,6 +387,7 @@ class GatewayStreamConsumer:
             self._reasoning_buffer = text
             # First chunk with prefix is always queued immediately
             self._queue.put(text)
+            self._reasoning_last_queued_len = len(text)
             return
         
         # Accumulate subsequent chunks in the reasoning buffer
@@ -394,15 +396,20 @@ class GatewayStreamConsumer:
         # Only queue the buffer when it reaches the buffer threshold or on finish
         # (the run() loop will process it when buffer_threshold is reached)
         if len(self._reasoning_buffer) >= self.cfg.buffer_threshold:
-            self._queue.put(self._reasoning_buffer)
-            self._reasoning_buffer = ""
+            # Queue only the new text since the last queue to avoid duplication
+            # in _accumulated via _filter_and_accumulate
+            new_text = self._reasoning_buffer[self._reasoning_last_queued_len:]
+            self._queue.put(new_text)
+            self._reasoning_last_queued_len = len(self._reasoning_buffer)
 
     def finish(self) -> None:
         """Signal that the stream is complete."""
         # Flush any remaining reasoning buffer
-        if self._reasoning_buffer:
-            self._queue.put(self._reasoning_buffer)
-            self._reasoning_buffer = ""
+        if self._reasoning_buffer and self._reasoning_prefix_added:
+            # Queue the remaining text that hasn't been queued yet
+            new_text = self._reasoning_buffer[self._reasoning_last_queued_len:]
+            if new_text:
+                self._queue.put(new_text)
         self._queue.put(_DONE)
 
     # ── Think-block filtering ────────────────────────────────────────
