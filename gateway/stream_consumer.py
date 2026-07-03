@@ -438,7 +438,11 @@ class GatewayStreamConsumer:
         """
         # If verbose_reasoning is enabled, skip think-block filtering
         if self.cfg.verbose_reasoning:
-            self._accumulated += text
+            # Normalize line breaks in text to prevent extra line breaks
+            normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
+            # Ensure we don't have excessive consecutive line breaks
+            normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
+            self._accumulated += normalized_text
             self._think_buffer = ""
             return
 
