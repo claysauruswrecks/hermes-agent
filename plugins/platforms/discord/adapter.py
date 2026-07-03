@@ -4384,6 +4384,9 @@ class DiscordAdapter(BasePlatformAdapter):
         ``<REASONING_SCRATCHPAD>``, ``<think>``, etc. are NOT filtered out
         and are displayed to the user in the streaming display.
         """
+        import logging
+        logger = logging.getLogger("hermes_plugins.discord_platform.adapter")
+        
         # Use the display config resolution system to get per-platform settings
         try:
             from gateway.display_config import resolve_display_setting
@@ -4393,29 +4396,44 @@ class DiscordAdapter(BasePlatformAdapter):
             user_config = load_gateway_config()
             
             # Use the display config resolution system
-            return resolve_display_setting(user_config, "discord", "verbose_reasoning", default=False)
-        except Exception:
-            pass
+            result = resolve_display_setting(user_config, "discord", "verbose_reasoning", default=False)
+            logger.info(f"[Discord] verbose_reasoning resolved via display_config: {result}")
+            return result
+        except Exception as e:
+            logger.warning(f"[Discord] verbose_reasoning display_config resolution failed: {e}")
             
         # Fallback to direct check in config.extra or env var
         display_config = self.config.extra.get("display", {}) if hasattr(self.config, 'extra') else {}
         platforms_config = display_config.get("platforms", {})
         discord_config = platforms_config.get("discord", {})
         configured = discord_config.get("verbose_reasoning")
+        logger.info(f"[Discord] verbose_reasoning from discord config: {configured}")
         if configured is not None:
             if isinstance(configured, str):
-                return configured.lower() not in {"false", "0", "no", "off"}
-            return bool(configured)
+                result = configured.lower() not in {"false", "0", "no", "off"}
+                logger.info(f"[Discord] verbose_reasoning resolved from discord config (string): {result}")
+                return result
+            result = bool(configured)
+            logger.info(f"[Discord] verbose_reasoning resolved from discord config (bool): {result}")
+            return result
             
         # Fallback to top-level display.verbose_reasoning
         configured_top = display_config.get("verbose_reasoning")
+        logger.info(f"[Discord] verbose_reasoning from top-level display config: {configured_top}")
         if configured_top is not None:
             if isinstance(configured_top, str):
-                return configured_top.lower() not in {"false", "0", "no", "off"}
-            return bool(configured_top)
+                result = configured_top.lower() not in {"false", "0", "no", "off"}
+                logger.info(f"[Discord] verbose_reasoning resolved from top-level display config (string): {result}")
+                return result
+            result = bool(configured_top)
+            logger.info(f"[Discord] verbose_reasoning resolved from top-level display config (bool): {result}")
+            return result
             
         # Fallback to env var
-        return os.getenv("DISCORD_VERBOSE_REASONING", "false").lower() in {"true", "1", "yes", "on"}
+        env_val = os.getenv("DISCORD_VERBOSE_REASONING", "false")
+        result = env_val.lower() in {"true", "1", "yes", "on"}
+        logger.info(f"[Discord] verbose_reasoning resolved from env var {env_val}: {result}")
+        return result
 
     def _discord_history_backfill(self) -> bool:
         """Return whether history backfill is enabled for shared sessions."""

@@ -181,6 +181,9 @@ def resolve_display_setting(
     -------
     The resolved value, or *fallback* if nothing is configured.
     """
+    import logging
+    logger = logging.getLogger("gateway.display_config")
+    
     display_cfg = user_config.get("display") or {}
 
     # 1. Explicit per-platform override (display.platforms.<platform>.<key>)
@@ -189,7 +192,9 @@ def resolve_display_setting(
     if isinstance(plat_overrides, dict):
         val = plat_overrides.get(setting)
         if val is not None:
-            return _normalise(setting, val)
+            result = _normalise(setting, val)
+            logger.debug(f"[DisplayConfig] Resolved {setting} for {platform_key} via per-platform override: {result}")
+            return result
 
     # 1b. Backward compat: display.tool_progress_overrides.<platform>
     if setting == "tool_progress":
@@ -197,7 +202,9 @@ def resolve_display_setting(
         if isinstance(legacy, dict):
             val = legacy.get(platform_key)
             if val is not None:
-                return _normalise(setting, val)
+                result = _normalise(setting, val)
+                logger.debug(f"[DisplayConfig] Resolved {setting} for {platform_key} via legacy overrides: {result}")
+                return result
 
     # 2. Global user setting (display.<key>).  Skip display.streaming because
     # that key controls only CLI terminal streaming; gateway token streaming is
@@ -205,20 +212,25 @@ def resolve_display_setting(
     if setting != "streaming":
         val = display_cfg.get(setting)
         if val is not None:
-            return _normalise(setting, val)
+            result = _normalise(setting, val)
+            logger.debug(f"[DisplayConfig] Resolved {setting} for {platform_key} via global display setting: {result}")
+            return result
 
     # 3. Built-in platform default
     plat_defaults = _PLATFORM_DEFAULTS.get(platform_key)
     if plat_defaults:
         val = plat_defaults.get(setting)
         if val is not None:
+            logger.debug(f"[DisplayConfig] Resolved {setting} for {platform_key} via platform default: {val}")
             return val
 
     # 4. Built-in global default
     val = _GLOBAL_DEFAULTS.get(setting)
     if val is not None:
+        logger.debug(f"[DisplayConfig] Resolved {setting} for {platform_key} via global default: {val}")
         return val
 
+    logger.debug(f"[DisplayConfig] Resolved {setting} for {platform_key} via fallback: {fallback}")
     return fallback
 
 

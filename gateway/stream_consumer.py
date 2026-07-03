@@ -367,9 +367,11 @@ class GatewayStreamConsumer:
         is finalized and subsequent text will be sent as a new message so it
         appears below any tool-progress messages the gateway sent in between.
         """
+        logger.debug("[StreamConsumer] on_delta called with text: %s", text[:50] if text else "None")
         if text:
             self._queue.put(text)
         elif text is None:
+            logger.debug("[StreamConsumer] on_delta called with None, signaling segment break")
             self.on_segment_break()
 
     def on_reasoning_delta(self, text: str) -> None:
@@ -378,7 +380,10 @@ class GatewayStreamConsumer:
         When *text* is provided, it's queued for display if verbose_reasoning is enabled.
         """
         if not text or not self.cfg.verbose_reasoning:
+            logger.debug("[StreamConsumer] on_reasoning_delta: text=%s verbose_reasoning=%s", bool(text), self.cfg.verbose_reasoning)
             return
+        
+        logger.debug("[StreamConsumer] on_reasoning_delta received: %s", text[:50] if text else "")
         
         # Buffer reasoning deltas to prevent tiny chunks from triggering excessive streaming edits
         if not self._reasoning_prefix_added:
@@ -388,6 +393,7 @@ class GatewayStreamConsumer:
             # First chunk with prefix is always queued immediately
             self._queue.put(text)
             self._reasoning_last_queued_len = len(text)
+            logger.debug("[StreamConsumer] First reasoning chunk queued with prefix, length: %s", len(text))
             return
         
         # Accumulate subsequent chunks in the reasoning buffer
@@ -399,6 +405,7 @@ class GatewayStreamConsumer:
             # Queue only the new text since the last queue to avoid duplication
             # in _accumulated via _filter_and_accumulate
             new_text = self._reasoning_buffer[self._reasoning_last_queued_len:]
+            logger.debug("[StreamConsumer] Reasoning buffer reached threshold, queuing new text: %s", new_text[:50] if new_text else "")
             self._queue.put(new_text)
             self._reasoning_last_queued_len = len(self._reasoning_buffer)
 
@@ -409,7 +416,9 @@ class GatewayStreamConsumer:
             # Queue the remaining text that hasn't been queued yet
             new_text = self._reasoning_buffer[self._reasoning_last_queued_len:]
             if new_text:
+                logger.debug("[StreamConsumer] Flushing remaining reasoning buffer: %s", new_text[:50] if new_text else "")
                 self._queue.put(new_text)
+        logger.debug("[StreamConsumer] finish called, putting _DONE")
         self._queue.put(_DONE)
 
     # ── Think-block filtering ────────────────────────────────────────

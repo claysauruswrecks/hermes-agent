@@ -15096,9 +15096,11 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     _verbose_reasoning = False
                     if source.platform == Platform.DISCORD and hasattr(_adapter, "_discord_verbose_reasoning"):
                         _verbose_reasoning = _adapter._discord_verbose_reasoning()
+                        logger.debug(f"[GatewayRun] Discord verbose_reasoning resolved: {_verbose_reasoning}")
                     # Verbose reasoning: Mattermost can opt-in to display all reasoning tokens
                     if source.platform == Platform.MATTERMOST and hasattr(_adapter, "_mattermost_verbose_reasoning"):
                         _verbose_reasoning = _adapter._mattermost_verbose_reasoning()
+                        logger.debug(f"[GatewayRun] Mattermost verbose_reasoning resolved: {_verbose_reasoning}")
                     _consumer_cfg = StreamConsumerConfig(
                         edit_interval=_scfg.edit_interval,
                         buffer_threshold=_scfg.buffer_threshold,
@@ -15538,6 +15540,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
 
         def _flush_thinking_progress_buffer():
             """Flush any remaining thinking progress buffer to the progress_queue."""
+            logger.debug("[GatewayRun] _flush_thinking_progress_buffer called, buffer: %s", _thinking_progress_buffer[0][:50] if _thinking_progress_buffer and _thinking_progress_buffer[0] else "empty")
             if _thinking_progress_buffer and _thinking_progress_buffer[0]:
                 # Add "💬 **Thinking:** " prefix only on the first flush
                 prefix = "💬 **Thinking:** " if not _thinking_progress_prefix_added[0] else ""
@@ -15545,6 +15548,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     _thinking_progress_prefix_added[0] = True
                 progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
                 _thinking_progress_buffer[0] = ""
+                logger.debug("[GatewayRun] Thinking progress buffer flushed to progress_queue")
 
         def progress_callback(event_type: str, tool_name: str = None, preview: str = None, args: dict = None, **kwargs):
             """Callback invoked by agent on tool lifecycle events."""
@@ -16382,9 +16386,12 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                                     _stream_consumer.on_delta(text)
                             # Set up reasoning callback if verbose_reasoning is enabled
                             _reasoning_delta_cb = None
-                            if _stream_consumer.cfg.verbose_reasoning:
+                            logger.debug(f"[GatewayRun] Checking verbose_reasoning for reasoning callback: _stream_consumer.cfg.verbose_reasoning={_stream_consumer.cfg.verbose_reasoning if _stream_consumer else None}")
+                            if _stream_consumer and _stream_consumer.cfg.verbose_reasoning:
+                                logger.debug(f"[GatewayRun] Setting up _reasoning_delta_cb callback")
                                 def _reasoning_delta_cb(text: str) -> None:
                                     if _run_still_current():
+                                        logger.debug(f"[GatewayRun] _reasoning_delta_cb called with text: {text[:50] if text else ''}...")
                                         _stream_consumer.on_reasoning_delta(text)
                         # Set up reasoning progress callback for thinking_progress when streaming is disabled
                         _reasoning_progress_cb = None
@@ -16596,9 +16603,12 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             # Wire reasoning callback:
             # - If streaming is enabled and verbose_reasoning is enabled, use _reasoning_delta_cb
             # - If thinking_progress is enabled and we have a progress queue (non-streaming mode), use _reasoning_progress_cb
+            logger.debug(f"[GatewayRun] Evaluating reasoning callback assignment: _want_stream_deltas={_want_stream_deltas}, _stream_consumer={_stream_consumer is not None}, _stream_consumer.cfg.verbose_reasoning={_stream_consumer.cfg.verbose_reasoning if _stream_consumer else None}, _reasoning_delta_cb is not None={_reasoning_delta_cb is not None}")
             if _want_stream_deltas and _stream_consumer and _stream_consumer.cfg.verbose_reasoning and _reasoning_delta_cb is not None:
+                logger.debug(f"[GatewayRun] Assigning agent.reasoning_callback = _reasoning_delta_cb")
                 agent.reasoning_callback = _reasoning_delta_cb
             elif _thinking_enabled and progress_queue is not None and _reasoning_progress_cb is not None:
+                logger.debug(f"[GatewayRun] Assigning agent.reasoning_callback = _reasoning_progress_cb")
                 agent.reasoning_callback = _reasoning_progress_cb
             agent.interim_assistant_callback = _interim_assistant_cb if _want_interim_messages else None
             agent.status_callback = _status_callback_sync
