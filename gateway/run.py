@@ -15526,6 +15526,16 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         long_tool_hint_fired = [False]
         _LONG_TOOL_THRESHOLD_S = 30.0
 
+        _scfg = getattr(getattr(self, "config", None), "streaming", None)
+        if _scfg is None:
+            from gateway.config import StreamingConfig
+            _scfg = StreamingConfig()
+
+        # Buffer for thinking progress to prevent tiny chunks from triggering excessive streaming edits
+        _thinking_progress_buffer = [""]
+        _thinking_progress_buffer_threshold = [getattr(_scfg, "buffer_threshold", 24)]
+        _thinking_progress_prefix_added = [False]
+
         def progress_callback(event_type: str, tool_name: str = None, preview: str = None, args: dict = None, **kwargs):
             """Callback invoked by agent on tool lifecycle events."""
             if not progress_queue or not _run_still_current():
@@ -15570,9 +15580,17 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     return
                 thinking_text = preview if tool_name == "_thinking" else tool_name
                 if thinking_text:
-                    # Format thinking_text with "💬" prefix
-                    formatted_text = f"💬 {thinking_text}"
-                    progress_queue.put(formatted_text)
+                    # Buffer thinking_text to prevent tiny chunks from triggering excessive streaming edits
+                    _thinking_progress_buffer[0] += thinking_text
+                    
+                    # Only queue the buffer when it reaches the buffer threshold
+                    if len(_thinking_progress_buffer[0]) >= _thinking_progress_buffer_threshold[0]:
+                        # Add "💬 " prefix only on the first flush
+                        prefix = "💬 " if not _thinking_progress_prefix_added[0] else ""
+                        if not _thinking_progress_prefix_added[0]:
+                            _thinking_progress_prefix_added[0] = True
+                        progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
+                        _thinking_progress_buffer[0] = ""
                 return
 
             # If tool_progress is off, only _thinking passes through (above).
@@ -16027,6 +16045,14 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                 except queue.Empty:
                     await asyncio.sleep(0.3)
                 except asyncio.CancelledError:
+                    # Flush any remaining thinking progress buffer
+                    if _thinking_progress_buffer and _thinking_progress_buffer[0]:
+                        # Add "💬 " prefix only on the first flush
+                        prefix = "💬 " if not _thinking_progress_prefix_added[0] else ""
+                        if not _thinking_progress_prefix_added[0]:
+                            _thinking_progress_prefix_added[0] = True
+                        progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
+                        _thinking_progress_buffer[0] = ""
                     # Drain remaining queued messages
                     while not progress_queue.empty():
                         try:
@@ -16333,12 +16359,23 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                                         _stream_consumer.on_reasoning_delta(text)
                         # Set up reasoning progress callback for thinking_progress when streaming is disabled
                         _reasoning_progress_cb = None
+                        _thinking_progress_buffer = [""]
+                        _thinking_progress_buffer_threshold = [getattr(_scfg, 'buffer_threshold', 24)]
+                        _thinking_progress_prefix_added = [False]
                         if _thinking_enabled and progress_queue is not None:
                             def _reasoning_progress_cb(text: str) -> None:
                                 if _run_still_current() and progress_queue is not None:
-                                    # Format thinking_text with "💬" prefix
-                                    formatted_text = f"💬 {text}"
-                                    progress_queue.put(formatted_text)
+                                    # Buffer thinking_text to prevent tiny chunks from triggering excessive streaming edits
+                                    _thinking_progress_buffer[0] += text
+                                    
+                                    # Only queue the buffer when it reaches the buffer threshold
+                                    if len(_thinking_progress_buffer[0]) >= _thinking_progress_buffer_threshold[0]:
+                                        # Add "💬 " prefix only on the first flush
+                                        prefix = "💬 " if not _thinking_progress_prefix_added[0] else ""
+                                        if not _thinking_progress_prefix_added[0]:
+                                            _thinking_progress_prefix_added[0] = True
+                                        progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
+                                        _thinking_progress_buffer[0] = ""
                         stream_consumer_holder[0] = _stream_consumer
                 except Exception as _sc_err:
                     logger.debug("Could not set up stream consumer: %s", _sc_err)
