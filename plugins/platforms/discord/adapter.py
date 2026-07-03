@@ -4393,10 +4393,9 @@ class DiscordAdapter(BasePlatformAdapter):
             if isinstance(configured, str):
                 return configured.lower() not in {"false", "0", "no", "off"}
             return bool(configured)
-        
+            
         # Fallback to top-level display.verbose_reasoning or env var
-        display_config_top = self.config.extra.get("display", {})
-        configured_top = display_config_top.get("verbose_reasoning")
+        configured_top = display_config.get("verbose_reasoning")
         if configured_top is not None:
             if isinstance(configured_top, str):
                 return configured_top.lower() not in {"false", "0", "no", "off"}
