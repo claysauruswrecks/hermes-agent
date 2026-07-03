@@ -16388,9 +16388,6 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                                         _stream_consumer.on_reasoning_delta(text)
                         # Set up reasoning progress callback for thinking_progress when streaming is disabled
                         _reasoning_progress_cb = None
-                        _thinking_progress_buffer = [""]
-                        _thinking_progress_buffer_threshold = [getattr(_scfg, 'buffer_threshold', 24)]
-                        _thinking_progress_prefix_added = [False]
                         if _thinking_enabled and progress_queue is not None:
                             def _reasoning_progress_cb(text: str) -> None:
                                 if _run_still_current() and progress_queue is not None:
