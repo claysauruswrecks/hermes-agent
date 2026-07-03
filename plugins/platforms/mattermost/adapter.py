@@ -423,6 +423,20 @@ class MattermostAdapter(BasePlatformAdapter):
         ``<REASONING_SCRATCHPAD>``, ``<think>``, etc. are NOT filtered out
         and are displayed to the user in the streaming display.
         """
+        # Use the display config resolution system to get per-platform settings
+        try:
+            from gateway.display_config import resolve_display_setting
+            from gateway.config import load_gateway_config
+            
+            # Get the full user config from the gateway config
+            user_config = load_gateway_config()
+            
+            # Use the display config resolution system
+            return resolve_display_setting(user_config, "mattermost", "verbose_reasoning", default=False)
+        except Exception:
+            pass
+            
+        # Fallback to direct check in config.extra or env var
         configured = self.config.extra.get("verbose_reasoning")
         if configured is not None:
             if isinstance(configured, str):

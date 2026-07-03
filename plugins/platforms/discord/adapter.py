@@ -4384,8 +4384,21 @@ class DiscordAdapter(BasePlatformAdapter):
         ``<REASONING_SCRATCHPAD>``, ``<think>``, etc. are NOT filtered out
         and are displayed to the user in the streaming display.
         """
-        # Check display.platforms.discord.verbose_reasoning first
-        display_config = self.config.extra.get("display", {})
+        # Use the display config resolution system to get per-platform settings
+        try:
+            from gateway.display_config import resolve_display_setting
+            from gateway.config import load_gateway_config
+            
+            # Get the full user config from the gateway config
+            user_config = load_gateway_config()
+            
+            # Use the display config resolution system
+            return resolve_display_setting(user_config, "discord", "verbose_reasoning", default=False)
+        except Exception:
+            pass
+            
+        # Fallback to direct check in config.extra or env var
+        display_config = self.config.extra.get("display", {}) if hasattr(self.config, 'extra') else {}
         platforms_config = display_config.get("platforms", {})
         discord_config = platforms_config.get("discord", {})
         configured = discord_config.get("verbose_reasoning")
@@ -4394,13 +4407,14 @@ class DiscordAdapter(BasePlatformAdapter):
                 return configured.lower() not in {"false", "0", "no", "off"}
             return bool(configured)
             
-        # Fallback to top-level display.verbose_reasoning or env var
+        # Fallback to top-level display.verbose_reasoning
         configured_top = display_config.get("verbose_reasoning")
         if configured_top is not None:
             if isinstance(configured_top, str):
                 return configured_top.lower() not in {"false", "0", "no", "off"}
             return bool(configured_top)
             
+        # Fallback to env var
         return os.getenv("DISCORD_VERBOSE_REASONING", "false").lower() in {"true", "1", "yes", "on"}
 
     def _discord_history_backfill(self) -> bool:
