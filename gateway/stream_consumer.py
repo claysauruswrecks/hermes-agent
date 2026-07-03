@@ -390,13 +390,7 @@ class GatewayStreamConsumer:
             self._queue.put(text)
             return
         
-        # Normalize line breaks in reasoning text to prevent extra line breaks
-        # when the buffer is flushed and messages are edited
-        normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
-        # Ensure we don't have excessive consecutive line breaks
-        normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
-        
-        self._reasoning_buffer += normalized_text
+        self._reasoning_buffer += text
         
         # Flush to queue when buffer reaches a reasonable size (e.g., 50 characters)
         # to avoid excessive streaming edits while still providing reasonably timely updates
@@ -408,12 +402,7 @@ class GatewayStreamConsumer:
         """Signal that the stream is complete."""
         # Flush any remaining reasoning buffer
         if self._reasoning_buffer:
-            # Normalize line breaks in reasoning text to prevent extra line breaks
-            # when the buffer is flushed and messages are edited
-            normalized_text = self._reasoning_buffer.replace('\r\n', '\n').replace('\r', '\n')
-            # Ensure we don't have excessive consecutive line breaks
-            normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
-            self._queue.put(normalized_text)
+            self._queue.put(self._reasoning_buffer)
             self._reasoning_buffer = ""
         self._queue.put(_DONE)
 
@@ -438,11 +427,7 @@ class GatewayStreamConsumer:
         """
         # If verbose_reasoning is enabled, skip think-block filtering
         if self.cfg.verbose_reasoning:
-            # Normalize line breaks in text to prevent extra line breaks
-            normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
-            # Ensure we don't have excessive consecutive line breaks
-            normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
-            self._accumulated += normalized_text
+            self._accumulated += text
             self._think_buffer = ""
             return
 
