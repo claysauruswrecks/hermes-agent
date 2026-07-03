@@ -4384,11 +4384,23 @@ class DiscordAdapter(BasePlatformAdapter):
         ``<REASONING_SCRATCHPAD>``, ``<think>``, etc. are NOT filtered out
         and are displayed to the user in the streaming display.
         """
-        configured = self.config.extra.get("verbose_reasoning")
+        # Check display.platforms.discord.verbose_reasoning first
+        platforms_config = self.config.extra.get("platforms", {})
+        discord_config = platforms_config.get("discord", {})
+        configured = discord_config.get("verbose_reasoning")
         if configured is not None:
             if isinstance(configured, str):
                 return configured.lower() not in {"false", "0", "no", "off"}
             return bool(configured)
+        
+        # Fallback to top-level discord.verbose_reasoning or env var
+        discord_config_top = self.config.extra.get("discord", {})
+        configured_top = discord_config_top.get("verbose_reasoning")
+        if configured_top is not None:
+            if isinstance(configured_top, str):
+                return configured_top.lower() not in {"false", "0", "no", "off"}
+            return bool(configured_top)
+            
         return os.getenv("DISCORD_VERBOSE_REASONING", "false").lower() in {"true", "1", "yes", "on"}
 
     def _discord_history_backfill(self) -> bool:
