@@ -16085,6 +16085,32 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                                 await _roll_progress_overflow_if_needed()
                         except Exception:
                             break
+                    # Flush any remaining thinking progress buffer on normal completion
+                    _flush_thinking_progress_buffer()
+                    # Drain remaining queued messages
+                    while not progress_queue.empty():
+                        try:
+                            raw = progress_queue.get_nowait()
+                            if isinstance(raw, tuple) and len(raw) >= 1 and raw[0] == "__reset__":
+                                # Content-bubble marker during drain: close off
+                                # the current progress bubble and start a fresh
+                                # one for any tool lines that arrived after.
+                                await _roll_progress_overflow_if_needed()
+                                if can_edit and progress_lines and progress_msg_id:
+                                    _pending_text = _progress_text(progress_lines)
+                                    try:
+                                        await _edit_progress_message(progress_msg_id, _pending_text)
+                                    except Exception:
+                                        pass
+                                progress_msg_id = None
+                                progress_lines = []
+                                last_progress_msg[0] = None
+                                repeat_count[0] = 0
+                            else:
+                                progress_lines.append(raw)
+                                await _roll_progress_overflow_if_needed()
+                        except Exception:
+                            break
                     # Final edit with all remaining tools (only if editing works)
                     if can_edit and progress_lines and progress_msg_id:
                         await _roll_progress_overflow_if_needed()
@@ -16094,8 +16120,6 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                             await _edit_progress_message(progress_msg_id, full_text)
                         except Exception:
                             pass
-                    # Flush any remaining thinking progress buffer on normal completion
-                    _flush_thinking_progress_buffer()
                     return
                 except Exception as e:
                     logger.error("Progress message error: %s", e)
