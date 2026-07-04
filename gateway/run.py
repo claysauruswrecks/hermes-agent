@@ -15537,14 +15537,23 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         _thinking_progress_buffer = [""]
         _thinking_progress_buffer_threshold = [getattr(_scfg, "buffer_threshold", 24)]
         _thinking_progress_prefix_added = [False]
+        _thinking_progress_last_queued_len = [0]
 
         def _flush_thinking_progress_buffer():
             """Flush any remaining thinking progress buffer to the progress_queue."""
             logger.debug("[GatewayRun] _flush_thinking_progress_buffer called, buffer: %s", _thinking_progress_buffer[0][:50] if _thinking_progress_buffer and _thinking_progress_buffer[0] else "empty")
             if _thinking_progress_buffer and _thinking_progress_buffer[0]:
-                # Add "💬 **Thinking:** " prefix for each flush
-                prefix = "💬 **Thinking:** "
-                progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
+                # Add "💬 **Thinking:** " prefix only on the first flush of a new thinking session
+                prefix = "💬 **Thinking:** " if not _thinking_progress_prefix_added[0] else ""
+                if not _thinking_progress_prefix_added[0]:
+                    _thinking_progress_prefix_added[0] = True
+                
+                # Queue only the new text since the last queue to avoid duplication
+                new_text = _thinking_progress_buffer[0][_thinking_progress_last_queued_len[0]:]
+                if new_text:
+                    progress_queue.put(f"{prefix}{new_text}")
+                    _thinking_progress_last_queued_len[0] = len(_thinking_progress_buffer[0])
+                
                 _thinking_progress_buffer[0] = ""
                 logger.debug("[GatewayRun] Thinking progress buffer flushed to progress_queue")
 
@@ -15590,6 +15599,9 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             if event_type == "_thinking" or tool_name == "_thinking":
                 if not _thinking_enabled:
                     return
+                # Reset thinking prefix flag and last queued length at the start of a new thinking session
+                _thinking_progress_prefix_added[0] = False
+                _thinking_progress_last_queued_len[0] = 0
                 thinking_text = preview if tool_name == "_thinking" else tool_name
                 if thinking_text:
                     # Normalize line breaks to prevent extra line breaks
@@ -15612,6 +15624,9 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             # Only act on tool.started events (ignore tool.completed, reasoning.available, etc.)
             if event_type not in {"tool.started",}:
                 return
+
+            # Reset thinking prefix flag when a new tool starts (so next thinking tokens get the prefix)
+            _thinking_progress_prefix_added[0] = False
 
             # Suppress tool-progress bubbles once the user has sent `stop`.
             # When the LLM response carries N parallel tool calls, the agent
