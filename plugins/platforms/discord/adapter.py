@@ -4390,10 +4390,10 @@ class DiscordAdapter(BasePlatformAdapter):
         # Use the display config resolution system to get per-platform settings
         try:
             from gateway.display_config import resolve_display_setting
-            from gateway.config import load_gateway_config
+            from gateway.run import _load_gateway_config
             
-            # Get the full user config from the gateway config
-            user_config = load_gateway_config()
+            # Get the full user config from the gateway config (returns a dict)
+            user_config = _load_gateway_config()
             
             # Use the display config resolution system
             result = resolve_display_setting(user_config, "discord", "verbose_reasoning", default=False)
