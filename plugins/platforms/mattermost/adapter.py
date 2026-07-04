@@ -423,6 +423,10 @@ class MattermostAdapter(BasePlatformAdapter):
         ``<REASONING_SCRATCHPAD>``, ``<think>``, etc. are NOT filtered out
         and are displayed to the user in the streaming display.
         """
+        import logging
+        logger = logging.getLogger("hermes_plugins.mattermost_platform.adapter")
+        logger.debug(f"[Mattermost] _mattermost_verbose_reasoning() called")
+        
         # Use the display config resolution system to get per-platform settings
         try:
             from gateway.display_config import resolve_display_setting
@@ -430,19 +434,42 @@ class MattermostAdapter(BasePlatformAdapter):
             
             # Get the full user config from the gateway config (returns a dict)
             user_config = _load_gateway_config()
+            logger.debug(f"[Mattermost] _load_gateway_config() returned config type: {type(user_config)}")
+            if isinstance(user_config, dict):
+                logger.debug(f"[Mattermost] config has 'display' key: {'display' in user_config}")
+                if 'display' in user_config and isinstance(user_config['display'], dict):
+                    logger.debug(f"[Mattermost] display has 'platforms' key: {'platforms' in user_config['display']}")
+                    if 'platforms' in user_config['display'] and isinstance(user_config['display']['platforms'], dict):
+                        logger.debug(f"[Mattermost] platforms has 'mattermost' key: {'mattermost' in user_config['display']['platforms']}")
+                        if 'mattermost' in user_config['display']['platforms']:
+                            mattermost_platform_cfg = user_config['display']['platforms']['mattermost']
+                            logger.debug(f"[Mattermost] mattermost platform config: {mattermost_platform_cfg}")
+                            logger.debug(f"[Mattermost] mattermost platform config has 'verbose_reasoning' key: {'verbose_reasoning' in mattermost_platform_cfg}")
             
             # Use the display config resolution system
-            return resolve_display_setting(user_config, "mattermost", "verbose_reasoning", default=False)
-        except Exception:
-            pass
+            logger.debug(f"[Mattermost] Calling resolve_display_setting with user_config, 'mattermost', 'verbose_reasoning', default=False")
+            result = resolve_display_setting(user_config, "mattermost", "verbose_reasoning", default=False)
+            logger.info(f"[Mattermost] verbose_reasoning resolved via display_config: {result}")
+            return result
+        except Exception as e:
+            logger.warning(f"[Mattermost] verbose_reasoning display_config resolution failed: {e}")
+            import traceback
+            logger.warning(f"[Mattermost] Traceback: {traceback.format_exc()}")
             
         # Fallback to direct check in config.extra or env var
         configured = self.config.extra.get("verbose_reasoning")
+        logger.debug(f"[Mattermost] configured from self.config.extra: {configured}")
         if configured is not None:
             if isinstance(configured, str):
-                return configured.lower() not in {"false", "0", "no", "off"}
-            return bool(configured)
-        return os.getenv("MATTERMOST_VERBOSE_REASONING", "false").lower() in {"true", "1", "yes", "on"}
+                result = configured.lower() not in {"false", "0", "no", "off"}
+                logger.info(f"[Mattermost] verbose_reasoning resolved from config.extra (string): {result}")
+                return result
+            result = bool(configured)
+            logger.info(f"[Mattermost] verbose_reasoning resolved from config.extra (bool): {result}")
+            return result
+        env_val = os.getenv("MATTERMOST_VERBOSE_REASONING", "false")
+        result = env_val.lower() in {"true", "1", "yes", "on"}
+        logger.info(f"[Mattermost] verbose_reasoning resolved from env var {env_val}: {result}")
 
     async def send_image(
         self,

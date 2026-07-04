@@ -379,13 +379,15 @@ class GatewayStreamConsumer:
 
         When *text* is provided, it's queued for display if verbose_reasoning is enabled.
         """
+        logger.debug(f"[StreamConsumer] on_reasoning_delta called: text={bool(text)}, verbose_reasoning={self.cfg.verbose_reasoning}")
         if not text or not self.cfg.verbose_reasoning:
             logger.debug("[StreamConsumer] on_reasoning_delta: text=%s verbose_reasoning=%s", bool(text), self.cfg.verbose_reasoning)
             return
         
-        logger.debug("[StreamConsumer] on_reasoning_delta received: %s", text[:50] if text else "")
+        logger.debug(f"[StreamConsumer] on_reasoning_delta received: {text[:50] if text else ''}")
         
         # Buffer reasoning deltas to prevent tiny chunks from triggering excessive streaming edits
+        logger.debug(f"[StreamConsumer] on_reasoning_delta: _reasoning_prefix_added={self._reasoning_prefix_added}, _reasoning_buffer_len={len(self._reasoning_buffer)}")
         if not self._reasoning_prefix_added:
             text = f"💭 **Reasoning:** {text}"
             self._reasoning_prefix_added = True
@@ -401,6 +403,7 @@ class GatewayStreamConsumer:
         
         # Only queue the buffer when it reaches the buffer threshold or on finish
         # (the run() loop will process it when buffer_threshold is reached)
+        logger.debug(f"[StreamConsumer] on_reasoning_delta: len(_reasoning_buffer)={len(self._reasoning_buffer)}, buffer_threshold={self.cfg.buffer_threshold}")
         if len(self._reasoning_buffer) >= self.cfg.buffer_threshold:
             # Queue only the new text since the last queue to avoid duplication
             # in _accumulated via _filter_and_accumulate
@@ -440,8 +443,10 @@ class GatewayStreamConsumer:
         If verbose_reasoning is True, reasoning blocks are NOT filtered and
         are displayed to the user.
         """
+        logger.debug(f"[StreamConsumer] _filter_and_accumulate called: text_len={len(text) if text else 0}, verbose_reasoning={self.cfg.verbose_reasoning}, _in_think_block={self._in_think_block}")
         # If verbose_reasoning is enabled, skip think-block filtering
         if self.cfg.verbose_reasoning:
+            logger.debug("[StreamConsumer] _filter_and_accumulate: verbose_reasoning enabled, skipping think-block filtering")
             self._accumulated += text
             self._think_buffer = ""
             return

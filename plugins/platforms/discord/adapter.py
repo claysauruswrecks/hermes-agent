@@ -4386,6 +4386,7 @@ class DiscordAdapter(BasePlatformAdapter):
         """
         import logging
         logger = logging.getLogger("hermes_plugins.discord_platform.adapter")
+        logger.debug(f"[Discord] _discord_verbose_reasoning() called")
         
         # Use the display config resolution system to get per-platform settings
         try:
@@ -4394,18 +4395,35 @@ class DiscordAdapter(BasePlatformAdapter):
             
             # Get the full user config from the gateway config (returns a dict)
             user_config = _load_gateway_config()
+            logger.debug(f"[Discord] _load_gateway_config() returned config type: {type(user_config)}")
+            if isinstance(user_config, dict):
+                logger.debug(f"[Discord] config has 'display' key: {'display' in user_config}")
+                if 'display' in user_config and isinstance(user_config['display'], dict):
+                    logger.debug(f"[Discord] display has 'platforms' key: {'platforms' in user_config['display']}")
+                    if 'platforms' in user_config['display'] and isinstance(user_config['display']['platforms'], dict):
+                        logger.debug(f"[Discord] platforms has 'discord' key: {'discord' in user_config['display']['platforms']}")
+                        if 'discord' in user_config['display']['platforms']:
+                            discord_platform_cfg = user_config['display']['platforms']['discord']
+                            logger.debug(f"[Discord] discord platform config: {discord_platform_cfg}")
+                            logger.debug(f"[Discord] discord platform config has 'verbose_reasoning' key: {'verbose_reasoning' in discord_platform_cfg}")
             
             # Use the display config resolution system
+            logger.debug(f"[Discord] Calling resolve_display_setting with user_config, 'discord', 'verbose_reasoning', default=False")
             result = resolve_display_setting(user_config, "discord", "verbose_reasoning", default=False)
             logger.info(f"[Discord] verbose_reasoning resolved via display_config: {result}")
             return result
         except Exception as e:
             logger.warning(f"[Discord] verbose_reasoning display_config resolution failed: {e}")
+            import traceback
+            logger.warning(f"[Discord] Traceback: {traceback.format_exc()}")
             
         # Fallback to direct check in config.extra or env var
         display_config = self.config.extra.get("display", {}) if hasattr(self.config, 'extra') else {}
+        logger.debug(f"[Discord] display_config from self.config.extra: {display_config}")
         platforms_config = display_config.get("platforms", {})
+        logger.debug(f"[Discord] platforms_config: {platforms_config}")
         discord_config = platforms_config.get("discord", {})
+        logger.debug(f"[Discord] discord_config: {discord_config}")
         configured = discord_config.get("verbose_reasoning")
         logger.info(f"[Discord] verbose_reasoning from discord config: {configured}")
         if configured is not None:
