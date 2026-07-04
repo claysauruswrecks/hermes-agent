@@ -15542,10 +15542,8 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             """Flush any remaining thinking progress buffer to the progress_queue."""
             logger.debug("[GatewayRun] _flush_thinking_progress_buffer called, buffer: %s", _thinking_progress_buffer[0][:50] if _thinking_progress_buffer and _thinking_progress_buffer[0] else "empty")
             if _thinking_progress_buffer and _thinking_progress_buffer[0]:
-                # Add "💬 **Thinking:** " prefix only on the first flush
-                prefix = "💬 **Thinking:** " if not _thinking_progress_prefix_added[0] else ""
-                if not _thinking_progress_prefix_added[0]:
-                    _thinking_progress_prefix_added[0] = True
+                # Add "💬 **Thinking:** " prefix for each flush
+                prefix = "💬 **Thinking:** "
                 progress_queue.put(f"{prefix}{_thinking_progress_buffer[0]}")
                 _thinking_progress_buffer[0] = ""
                 logger.debug("[GatewayRun] Thinking progress buffer flushed to progress_queue")
