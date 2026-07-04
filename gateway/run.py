@@ -15593,10 +15593,12 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
 
             # "_thinking" is assistant scratch text between tool calls.  It
             # is never ordinary tool progress: only relay it when the platform
-            # explicitly opted into thinking_progress.  Handle both legacy
-            # callback shapes: ("_thinking", text) and
-            # ("reasoning.available", "_thinking", text, ...).
-            if event_type == "_thinking" or tool_name == "_thinking":
+            # explicitly opted into thinking_progress.  Handle legacy
+            # callback shape: ("_thinking", text).
+            # Note: ("reasoning.available", "_thinking", text, ...) events are
+            # reasoning events and should be handled by the reasoning callback,
+            # not the thinking progress buffer.
+            if event_type == "_thinking":
                 if not _thinking_enabled:
                     return
                 # Reset thinking prefix flag and last queued length at the start of a new thinking session
