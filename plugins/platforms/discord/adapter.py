@@ -4408,8 +4408,8 @@ class DiscordAdapter(BasePlatformAdapter):
                             logger.debug(f"[Discord] discord platform config has 'verbose_reasoning' key: {'verbose_reasoning' in discord_platform_cfg}")
             
             # Use the display config resolution system
-            logger.debug(f"[Discord] Calling resolve_display_setting with user_config, 'discord', 'verbose_reasoning', default=False")
-            result = resolve_display_setting(user_config, "discord", "verbose_reasoning", default=False)
+            logger.debug(f"[Discord] Calling resolve_display_setting with user_config, 'discord', 'verbose_reasoning', fallback=False")
+            result = resolve_display_setting(user_config, "discord", "verbose_reasoning", fallback=False)
             logger.info(f"[Discord] verbose_reasoning resolved via display_config: {result}")
             return result
         except Exception as e:

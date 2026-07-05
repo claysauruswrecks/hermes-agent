@@ -447,8 +447,8 @@ class MattermostAdapter(BasePlatformAdapter):
                             logger.debug(f"[Mattermost] mattermost platform config has 'verbose_reasoning' key: {'verbose_reasoning' in mattermost_platform_cfg}")
             
             # Use the display config resolution system
-            logger.debug(f"[Mattermost] Calling resolve_display_setting with user_config, 'mattermost', 'verbose_reasoning', default=False")
-            result = resolve_display_setting(user_config, "mattermost", "verbose_reasoning", default=False)
+            logger.debug(f"[Mattermost] Calling resolve_display_setting with user_config, 'mattermost', 'verbose_reasoning', fallback=False")
+            result = resolve_display_setting(user_config, "mattermost", "verbose_reasoning", fallback=False)
             logger.info(f"[Mattermost] verbose_reasoning resolved via display_config: {result}")
             return result
         except Exception as e:
