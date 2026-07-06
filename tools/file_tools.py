@@ -46,6 +46,33 @@ def _expand_tilde(path: str) -> str:
     return os.path.expanduser(path)
 
 
+def _normalize_macos_apfs_path(path_str: str) -> str:
+    """Normalize macOS APFS paths back to logical macOS paths.
+    
+    On modern macOS with APFS and SIP, paths are resolved to underlying
+    mount points like /System/Volumes/Data/... or /System/Volumes/System/...
+    This function maps them back to their logical forms for cross-platform
+    compatibility (e.g., Docker containers).
+    """
+    # Map APFS Data volume paths back to logical paths
+    path_str = path_str.replace('/System/Volumes/Data/Users/', '/Users/')
+    path_str = path_str.replace('/System/Volumes/Data/private/', '/private/')
+    path_str = path_str.replace('/System/Volumes/Data/var/', '/var/')
+    path_str = path_str.replace('/System/Volumes/Data/opt/', '/opt/')
+    path_str = path_str.replace('/System/Volumes/Data/home/', '/home/')
+    path_str = path_str.replace('/System/Volumes/Data/root/', '/root/')
+    
+    # Map APFS System volume paths back to logical paths
+    path_str = path_str.replace('/System/Volumes/System/', '/System/')
+    
+    # Map other common APFS mount points
+    path_str = path_str.replace('/System/Volumes/VM/', '/var/vm/')
+    path_str = path_str.replace('/System/Volumes/Preboot/', '/private/var/db/BootCaches/')
+    path_str = path_str.replace('/System/Volumes/Update/', '/private/var/db/updates/')
+    
+    return path_str
+
+
 # ---------------------------------------------------------------------------
 # Read-size guard: cap the character count returned to the model.
 # We're model-agnostic so we can't count tokens; characters are a safe proxy.
@@ -299,7 +326,10 @@ def _resolve_base_dir(task_id: str = "default") -> Path:
         # terminal backend ever reports a relative cwd, anchor it to the process
         # cwd once, here, so the result no longer depends on cwd at resolve().
         base = Path(os.getcwd()) / base
-    return base.resolve()
+    resolved = base.resolve()
+    # Normalize macOS APFS paths back to logical paths
+    resolved_str = _normalize_macos_apfs_path(str(resolved))
+    return Path(resolved_str)
 
 
 def _resolve_path_for_task(filepath: str, task_id: str = "default") -> Path:
@@ -310,8 +340,14 @@ def _resolve_path_for_task(filepath: str, task_id: str = "default") -> Path:
     """
     p = Path(_expand_tilde(filepath))
     if p.is_absolute():
-        return p.resolve()
-    return (_resolve_base_dir(task_id) / p).resolve()
+        resolved = p.resolve()
+        # Normalize macOS APFS paths back to logical paths
+        resolved_str = _normalize_macos_apfs_path(str(resolved))
+        return Path(resolved_str)
+    resolved = (_resolve_base_dir(task_id) / p)
+    # Normalize macOS APFS paths back to logical paths
+    resolved_str = _normalize_macos_apfs_path(str(resolved.resolve()))
+    return Path(resolved_str)
 
 
 def _path_resolution_warning(filepath: str, resolved: Path, task_id: str = "default") -> str | None:

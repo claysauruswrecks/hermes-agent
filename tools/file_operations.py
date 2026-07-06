@@ -34,6 +34,33 @@ from typing import Optional, List, Dict, Any, ClassVar
 from pathlib import Path
 from tools.binary_extensions import BINARY_EXTENSIONS
 
+
+
+def _normalize_macos_apfs_path(path_str: str) -> str:
+    """Normalize macOS APFS paths back to logical macOS paths.
+    
+    On modern macOS with APFS and SIP, paths are resolved to underlying
+    mount points like /System/Volumes/Data/... or /System/Volumes/System/...
+    This function maps them back to their logical forms for cross-platform
+    compatibility (e.g., Docker containers).
+    """
+    # Map APFS Data volume paths back to logical paths
+    path_str = path_str.replace('/System/Volumes/Data/Users/', '/Users/')
+    path_str = path_str.replace('/System/Volumes/Data/private/', '/private/')
+    path_str = path_str.replace('/System/Volumes/Data/var/', '/var/')
+    path_str = path_str.replace('/System/Volumes/Data/opt/', '/opt/')
+    path_str = path_str.replace('/System/Volumes/Data/home/', '/home/')
+    path_str = path_str.replace('/System/Volumes/Data/root/', '/root/')
+    
+    # Map APFS System volume paths back to logical paths
+    path_str = path_str.replace('/System/Volumes/System/', '/System/')
+    
+    # Map other common APFS mount points
+    path_str = path_str.replace('/System/Volumes/VM/', '/var/vm/')
+    path_str = path_str.replace('/System/Volumes/Preboot/', '/private/var/db/BootCaches/')
+    path_str = path_str.replace('/System/Volumes/Update/', '/private/var/db/updates/')
+    
+    return path_str
 from agent.file_safety import (
     build_write_denied_paths,
     build_write_denied_prefixes,
@@ -2088,11 +2115,11 @@ class ShellFileOperations(FileOperations):
         # file under the hidden path. Apply descendant filtering after command
         # execution so only the explicit root ancestry is bypassed.
         if has_hidden_path_ancestor:
-            normalized_root = search_root.resolve()
+            normalized_root = Path(_normalize_macos_apfs_path(str(search_root.resolve())))
             filtered_files = []
             for file_path in files:
                 try:
-                    rel_parts = Path(file_path).resolve().relative_to(normalized_root).parts
+                    rel_parts = Path(_normalize_macos_apfs_path(str(Path(file_path).resolve()))).relative_to(normalized_root).parts
                 except ValueError:
                     rel_parts = Path(file_path).parts
                 if any(part not in {".", ".."} and part.startswith(".") for part in rel_parts):
