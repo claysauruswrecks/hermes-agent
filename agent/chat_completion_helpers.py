@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
-from hermes_cli.timeouts import get_provider_request_timeout, get_provider_stale_timeout
+from hermes_cli.timeouts import get_provider_request_timeout, get_provider_stale_timeout, get_minimum_client_timeout
 from hermes_constants import PARTIAL_STREAM_STUB_ID, FINISH_REASON_LENGTH
 from agent.error_classifier import (
     FailoverReason, PROVIDER_STREAM_EMPTY_FRAME_ERROR_CODE, PROVIDER_STREAM_NON_JSON_ERROR_CODE,
@@ -2981,10 +2981,11 @@ class _StreamingCall(StreamingWaitMonitor):
         ``request_timeout_seconds`` wins over HERMES_API_TIMEOUT (1800s) and
         HERMES_STREAM_READ_TIMEOUT (120s); connect/pool cover the handshake, not
         inference: 30s, or capped at 60s when configured."""
+        min_timeout = get_minimum_client_timeout()
         cfg = get_provider_request_timeout(self.agent.provider, self.agent.model)
         base = cfg if cfg is not None else env_float("HERMES_API_TIMEOUT", 1800.0)
         if cfg is not None:
-            return base, cfg, min(base, 60.0)
+            return (base if base is not None else 0, cfg if cfg is not None else 0, min(base or 60.0, 60.0))
         read = env_float("HERMES_STREAM_READ_TIMEOUT", 120.0)
         stale = self._stream_stale_timeout
         if read == 120.0 and self.agent.base_url and is_local_endpoint(self.agent.base_url):
@@ -2995,7 +2996,14 @@ class _StreamingCall(StreamingWaitMonitor):
             # tolerates that, so the raw read timeout must not fire first.
             read = stale
             logger.debug("Cloud reasoning stream — read timeout raised to %.0fs to match stale-stream detector", read)
-        return base, read, 30.0
+        # Enforce minimum client timeout floor
+        if min_timeout is not None:
+            base = max(base, min_timeout)
+            read = max(read, min_timeout)
+            conn_cap = min(base, 60.0) if cfg is None else 30.0
+        else:
+            conn_cap = 30.0
+        return base, read, conn_cap
 
     @staticmethod
     def _choiceless_chunk(chunk, finish_reason):

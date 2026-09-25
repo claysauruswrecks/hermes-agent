@@ -470,7 +470,10 @@ _server_breaker_opened_at: Dict[Any, float] = {}
 # True while every strike in the current streak was the tool's own error payload (server reachable,
 # call rejected); picks the open-breaker wording, since "unreachable" was false for that case (#11113).
 _server_errors_all_application: Dict[Any, bool] = {}
-_CIRCUIT_BREAKER_THRESHOLD, _CIRCUIT_BREAKER_COOLDOWN_SEC = 3, 60.0
+# Circuit breaker thresholds — overridden via env vars for test/ops flexibility.
+# Default: threshold=3 (matches original), cooldown=60s (matches original).
+_CIRCUIT_BREAKER_THRESHOLD = int(os.getenv("MCP_CIRCUIT_BREAKER_THRESHOLD", "3"))
+_CIRCUIT_BREAKER_COOLDOWN_SEC = float(os.getenv("MCP_CIRCUIT_BREAKER_COOLDOWN_SEC", "60"))
 
 # Trust-tier gating (``trust: full | untrusted``): on an untrusted server every write-capable
 # call (discovery-time ``readOnlyHint`` not exactly True; malformed fails closed) needs approval
@@ -691,6 +694,125 @@ _MCP_DISCOVERY_LOCK_RETRY_DELAY_S = 0.5
 # Waiter budget (max_retries * delay) must outlast the pass ceiling: 320 s > 300 s.
 _MCP_DISCOVERY_LOCK_MAX_RETRIES = int(
     _MCP_DISCOVERY_PASS_MAX_SEC / _MCP_DISCOVERY_LOCK_RETRY_DELAY_S) + 20
+
+
+# ---------------------------------------------------------------------------
+# Native log-streaming tools — register at module level
+# ---------------------------------------------------------------------------
+# These tools run synchronously (no async loop needed) and read plain log
+# files from the agent's filesystem. They are always available regardless
+# of whether the VibeCAD broker is connected, so the model can debug
+# "Connection refused" / "broker unavailable" failures without leaving
+# the conversation.
+# ---------------------------------------------------------------------------
+
+_log_toolset = "mcp-logging"
+
+from tools.registry import registry
+
+
+def _read_mcp_stderr_log(max_lines: int = 500) -> str:
+    """Return the last *max_lines* lines of the MCP stderr log.
+
+    The MCP stdio subprocess writes its stderr into ~/.hermes/logs/mcp-stderr.log.
+    Each server launch is delimited by a ``===== ... =====`` header so the caller can
+    distinguish which server emitted which error.
+
+    Args:
+        max_lines: Maximum lines to return (default 500). Cap prevents
+            a large file from flooding context.
+    """
+    from hermes_constants import get_hermes_home
+
+    log_path = get_hermes_home() / "logs" / "mcp-stderr.log"
+    if not log_path.exists():
+        return "No MCP stderr log found at " + str(log_path)
+    try:
+        lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as exc:
+        return f"Failed to read MCP stderr log: {exc}"
+    tail = lines[-max_lines:] if len(lines) > max_lines else lines
+    return "\n".join(tail)
+
+
+def _read_agent_mcp_log(max_lines: int = 500, server_filter: str | None = None) -> str:
+    """Return the last *max_lines* lines of the agent log, optionally filtered.
+
+    The Hermes agent records MCP server lifecycle events (connection attempts,
+    circuit-breaker trips, parking, rejections) at WARNING/ERROR level in
+    ~/.hermes/logs/agent.log.
+
+    Args:
+        max_lines:        Maximum lines to return (default 500).
+        server_filter:    If set, only lines containing *server_filter* are
+                          kept (e.g. "vibecad" or "libreoffice").
+    """
+    from hermes_constants import get_hermes_home
+
+    log_path = get_hermes_home() / "logs" / "agent.log"
+    if not log_path.exists():
+        return "No agent log found at " + str(log_path)
+    try:
+        lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as exc:
+        return f"Failed to read agent log: {exc}"
+    tail = lines[-max_lines:] if len(lines) > max_lines else lines
+    if server_filter:
+        tail = [l for l in tail if server_filter.lower() in l.lower()]
+        if not tail:
+            return f"No agent-log lines found containing '{server_filter}' in the last {max_lines} lines."
+    return "\n".join(tail)
+
+
+registry.register(
+    name="mcp.read_mcp_stderr_log",
+    toolset=_log_toolset,
+    schema={
+        "name": "mcp.read_mcp_stderr_log",
+        "description": "Return the last 500 lines of the MCP stdio subprocess stderr log (~/.hermes/logs/mcp-stderr.log). Each server launch is delimited by a header line. Use this to diagnose connection failures, 'Connection refused', broker-unavailable errors, and auth issues from the stdio subprocess.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "max_lines": {
+                    "type": "integer",
+                    "description": "Number of lines to return (default 500). Cap prevents a large file from flooding context.",
+                },
+            },
+            "required": [],
+        },
+    },
+    handler=_read_mcp_stderr_log,
+    check_fn=None,
+    is_async=False,
+    description="Return the last 500 lines of the MCP stdio subprocess stderr log.",
+)
+
+registry.register(
+    name="mcp.read_agent_mcp_log",
+    toolset=_log_toolset,
+    schema={
+        "name": "mcp.read_agent_mcp_log",
+        "description": "Return the last 500 lines of the Hermes agent log (~/.hermes/logs/agent.log) with optional server-name filtering. Use this to diagnose MCP server connection attempts, circuit-breaker trips, parking events, and rejections. Pass server_filter='vibecad' to narrow to specific server lines.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "max_lines": {
+                    "type": "integer",
+                    "description": "Number of lines to return (default 500).",
+                },
+                "server_filter": {
+                    "type": "string",
+                    "description": "Optional server name to filter lines (e.g. 'vibecad', 'libreoffice'). Only lines containing this string are returned.",
+                },
+            },
+            "required": [],
+        },
+    },
+    handler=_read_agent_mcp_log,
+    check_fn=None,
+    is_async=False,
+    description="Return the last 500 lines of the Hermes agent log, optionally filtered by server name.",
+)
 
 
 # ---- BEGIN PLUGIN-COMPAT (revert-scheduled; see COMPAT_MANIFEST.md) ----
